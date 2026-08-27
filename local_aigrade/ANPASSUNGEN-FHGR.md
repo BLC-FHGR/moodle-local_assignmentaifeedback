@@ -146,6 +146,25 @@ plus Fallbacks für Atto (contenteditable) und reines Textarea inkl. `input`/`ch
 Wird kein Feld gefunden, erscheint eine Hinweismeldung statt stiller Wirkungslosigkeit.
 Neuer String `js_panel_apply_failed`.
 
+## Nachträglich ergänzt (v2.4.0): Automatische Bewertung bei Abgabe (Idee A)
+
+Opt-in pro Aufgabe, asynchron über den Moodle-Cron.
+
+- **Checkbox „Automatisch bei Abgabe bewerten"** pro Aufgabe (`lib.php`, neues Feld
+  `auto_grade` in `local_aigrade_config`).
+- **Observer** (`db/events.php` + `classes/observer.php`) reagiert auf
+  `\mod_assign\event\assessable_submitted` und stellt einen **Ad-hoc-Task** in die
+  Warteschlange. Der KI-Aufruf läuft **nie** im Submit-Request des Studierenden.
+- **Ad-hoc-Task** `classes/task/autograde_task.php`: erzeugt den Vorschlag im Hintergrund
+  (Cron) und speichert ihn in `local_aigrade_feedback` (keine Note, nur Panel).
+- **Dienstkonto** (`settings.php`, `autograde_user`): Konto, unter dem der KI-Aufruf läuft
+  (braucht `local/ai_manager:use`, bestätigte Nutzung, Kontingent). Leer = Fallback auf eine
+  bewertungsberechtigte Lehrperson des Kurses.
+- **Voraussetzungen:** laufender Cron; Modell-/Cron-Kapazität für Deadlines.
+- **Verhalten:** bereits vorhandenes Feedback wird nicht überschrieben (kein Re-Grade bei
+  erneuter Abgabe in v1). Fehler landen im Cron-Log (`mtrace`).
+- DB: Feld via `install.xml` + Upgrade (2026082007); Backup/Restore ergänzt.
+
 ## Betroffene Dateien
 `classes/grader.php`, `lib.php`, `settings.php`, `db/install.xml`, `db/upgrade.php`,
 `classes/privacy/provider.php`, `version.php`, `lang/de/…` (neu), `lang/en/…`,

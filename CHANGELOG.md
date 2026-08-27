@@ -3,6 +3,19 @@
 Änderungen an der FHGR-Fassung. Versionsangaben beziehen sich auf `local_aigrade`
 (sofern nicht anders vermerkt).
 
+## v2.4.0-fhgr — 2026-08-27 (Idee A)
+**Feature:** Automatische KI-Bewertung bei Abgabe (opt-in, asynchron).
+- Neue Checkbox „Automatisch bei Abgabe bewerten" pro Aufgabe (`auto_grade`).
+- Event-Observer auf `\mod_assign\event\assessable_submitted` stellt einen **Ad-hoc-Task**
+  in die Cron-Warteschlange (der KI-Aufruf läuft **nie** im Submit-Request des Studierenden).
+- Ad-hoc-Task `local_aigrade\task\autograde_task` erzeugt den Feedback-Vorschlag im
+  Hintergrund und speichert ihn in `local_aigrade_feedback` (keine Note, nur Panel).
+- Neue Einstellung **„Konto für automatische Bewertung"** (`autograde_user`): Dienstkonto,
+  unter dem der KI-Aufruf läuft (braucht ai_manager-Rechte, bestätigte Nutzung, Kontingent);
+  leer = Fallback auf eine bewertungsberechtigte Lehrperson des Kurses.
+- Voraussetzungen: laufender Moodle-Cron; bei Deadlines Modell-/Cron-Kapazität beachten.
+- DB: Feld `auto_grade` via `install.xml` + Upgrade (2026082007); Backup/Restore ergänzt.
+
 ## v2.3.2-fhgr — 2026-08-27
 **Fix:** „Ins Feedback-Feld übernehmen" funktionierte nicht.
 - Ursache: Moodle 4.x nutzt TinyMCE 6 mit globalem Zugriff `window.tinymce` (klein);

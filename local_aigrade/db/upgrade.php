@@ -179,5 +179,17 @@ function xmldb_local_aigrade_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026082004, 'local', 'aigrade');
     }
 
+    if ($oldversion < 2026082007) {
+        // Add auto_grade flag (automatically grade on submission).
+        $table = new xmldb_table('local_aigrade_config');
+        $field = new xmldb_field('auto_grade', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'enabled');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Aigrade savepoint reached.
+        upgrade_plugin_savepoint(true, 2026082007, 'local', 'aigrade');
+    }
+
     return true;
 }

@@ -64,6 +64,15 @@ function local_aigrade_coursemodule_standard_elements($formwrapper, $mform) {
         $mform->setDefault('aigrade_enabled', $aiconfig->enabled);
     }
 
+    // Automatically grade on submission (opt-in, runs asynchronously via cron).
+    $mform->addElement('advcheckbox', 'aigrade_auto_grade', get_string('aigrade_auto_grade', 'local_aigrade'));
+    $mform->addHelpButton('aigrade_auto_grade', 'aigrade_auto_grade', 'local_aigrade');
+    $mform->setType('aigrade_auto_grade', PARAM_INT);
+    $mform->disabledIf('aigrade_auto_grade', 'aigrade_enabled');
+    if ($aiconfig && isset($aiconfig->auto_grade)) {
+        $mform->setDefault('aigrade_auto_grade', $aiconfig->auto_grade);
+    }
+
     // AI instructions WITH rubric - full Moodle editor
     $mform->addElement('editor', 'aigrade_instructions_with_rubric_editor',
         get_string('aigrade_instructions_with_rubric_field', 'local_aigrade'),
@@ -189,6 +198,7 @@ function local_aigrade_coursemodule_edit_post_actions($data, $course) {
     $record = new stdClass();
     $record->assignmentid = $assignmentid;
     $record->enabled = isset($data->aigrade_enabled) ? $data->aigrade_enabled : 0;
+    $record->auto_grade = isset($data->aigrade_auto_grade) ? $data->aigrade_auto_grade : 0;
 
     // Editor elements submit as arrays with 'text' and 'format' keys.
     if (isset($data->aigrade_instructions_with_rubric_editor)) {

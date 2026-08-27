@@ -64,6 +64,13 @@ $string['setting_ai_manager_purpose'] = 'Local AI Manager: purpose';
 $string['setting_ai_manager_purpose_desc'] = 'Only relevant when the backend is set to "Local AI Manager". The AI grader sends the prompt through this purpose. The model used is configured per purpose and role inside Local AI Manager - choose the purpose you assigned your desired (local) model to. Recommended: "feedback".';
 $string['error_ai_manager_missing'] = 'The "local_ai_manager" plugin is not installed or unavailable. Install it, or select the Moodle core AI subsystem as the backend.';
 
+// Automatic grading on submission.
+$string['aigrade_auto_grade'] = 'Automatically grade on submission';
+$string['aigrade_auto_grade_help'] = 'When enabled, the AI automatically creates a feedback suggestion as soon as a student submits. Processing runs in the background (Moodle cron) and does not set a grade - the suggestion only appears in the panel. Requirements: a running cron and a configured grading account (see the plugin setting "Account for automatic grading").';
+$string['setting_autograde_user'] = 'Account for automatic grading';
+$string['setting_autograde_user_desc'] = 'Username of the account under which automatic grading runs in the background. This account must be allowed to use the local AI service (capability local/ai_manager:use), have confirmed AI usage and sufficient quota. Leave empty to instead use a teacher with grading capability in the respective course (less predictable).';
+$string['task_autograde'] = 'Background AI grading (AI Grader)';
+
 // Per-assignment instruction fields.
 $string['aigrade_instructions_with_rubric_field'] = 'AI instructions (with rubric)';
 $string['aigrade_instructions_with_rubric_field_help'] = 'Instructions for the AI when a rubric is uploaded. These instructions fully drive the grading behaviour, together with the uploaded rubric.';

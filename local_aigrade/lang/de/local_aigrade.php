@@ -63,6 +63,13 @@ $string['setting_ai_manager_purpose'] = 'Local AI Manager: Verwendungszweck (Pur
 $string['setting_ai_manager_purpose_desc'] = 'Nur relevant, wenn als Backend „Local AI Manager" gewählt ist. Der AI Grader sendet den Prompt über diesen Verwendungszweck. Das dabei verwendete Modell wird im Local AI Manager pro Verwendungszweck und Rolle festgelegt – wählen Sie den Zweck, dem Sie Ihr gewünschtes (lokales) Modell zugewiesen haben. Empfehlung: „feedback".';
 $string['error_ai_manager_missing'] = 'Das Plugin „local_ai_manager" ist nicht installiert oder nicht verfügbar. Installieren Sie es oder wählen Sie als Backend das Moodle Core AI-Subsystem.';
 
+// Automatische Bewertung bei Abgabe.
+$string['aigrade_auto_grade'] = 'Automatisch bei Abgabe bewerten';
+$string['aigrade_auto_grade_help'] = 'Wenn aktiviert, erstellt die KI automatisch einen Feedback-Vorschlag, sobald eine studentische Abgabe eingeht. Die Verarbeitung läuft im Hintergrund (Moodle-Cron) und setzt keine Note – der Vorschlag erscheint nur im Panel. Voraussetzungen: ein laufender Cron und ein konfiguriertes Bewertungskonto (siehe Plugin-Einstellungen „Konto für automatische Bewertung").';
+$string['setting_autograde_user'] = 'Konto für automatische Bewertung';
+$string['setting_autograde_user_desc'] = 'Benutzername des Kontos, unter dem die automatische Bewertung im Hintergrund läuft. Dieses Konto muss den lokalen KI-Dienst nutzen dürfen (Capability local/ai_manager:use), die KI-Nutzung bestätigt haben und über ausreichend Kontingent verfügen. Leer lassen, um stattdessen automatisch eine bewertungsberechtigte Lehrperson des jeweiligen Kurses zu verwenden (weniger vorhersehbar).';
+$string['task_autograde'] = 'KI-Bewertung im Hintergrund (AI Grader)';
+
 // Instruktionsfelder pro Aufgabe.
 $string['aigrade_instructions_with_rubric_field'] = 'KI-Anweisungen (mit Beurteilungsraster)';
 $string['aigrade_instructions_with_rubric_field_help'] = 'Anweisungen an die KI, wenn ein Beurteilungsraster hochgeladen wurde. Diese Anweisungen steuern das Bewertungsverhalten vollständig – zusammen mit dem hochgeladenen Raster.';

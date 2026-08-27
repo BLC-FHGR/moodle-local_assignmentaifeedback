@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="local/aigrade/db" VERSION="20260827" COMMENT="XMLDB file for Moodle local/aigrade"
+<XMLDB PATH="local/aigrade/db" VERSION="2026082701" COMMENT="XMLDB file for Moodle local/aigrade"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -9,6 +9,7 @@
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="assignmentid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Assignment ID"/>
         <FIELD NAME="enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="AI grading enabled"/>
+        <FIELD NAME="auto_grade" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Automatically grade on submission"/>
         <FIELD NAME="instructions" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Legacy instructions field"/>
         <FIELD NAME="instructions_with_rubric" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="AI instructions when rubric is uploaded"/>
         <FIELD NAME="instructions_without_rubric" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="AI instructions when no rubric"/>

@@ -82,6 +82,15 @@ if ($hassiteconfig) {
         $purposeoptions
     ));
 
+    // Service account for automatic grading on submission (background/cron).
+    $settings->add(new admin_setting_configtext(
+        'local_aigrade/autograde_user',
+        get_string('setting_autograde_user', 'local_aigrade'),
+        get_string('setting_autograde_user_desc', 'local_aigrade'),
+        '',
+        PARAM_USERNAME
+    ));
+
     // Default instructions WITH rubric.
     $settings->add(new admin_setting_configtextarea(
         'local_aigrade/default_instructions_with_rubric',

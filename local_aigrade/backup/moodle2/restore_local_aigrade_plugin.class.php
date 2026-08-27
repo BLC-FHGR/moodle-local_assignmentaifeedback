@@ -90,7 +90,7 @@ class restore_local_aigrade_plugin extends restore_local_plugin {
         // versions may carry removed fields (e.g. grade_level, grading_strictness,
         // legacy instructions); those are dropped here so the restore stays robust.
         $allowedfields = [
-            'id', 'assignmentid', 'enabled', 'instructions_with_rubric',
+            'id', 'assignmentid', 'enabled', 'auto_grade', 'instructions_with_rubric',
             'instructions_without_rubric', 'rubricfile', 'timecreated', 'timemodified',
         ];
 

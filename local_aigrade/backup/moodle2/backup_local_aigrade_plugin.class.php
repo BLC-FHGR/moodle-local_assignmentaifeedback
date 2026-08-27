@@ -49,6 +49,7 @@ class backup_local_aigrade_plugin extends backup_local_plugin {
         // Teachers will need to re-upload rubrics after restore.
         $aigradeconfig = new backup_nested_element('aigrade_config', ['id'], [
             'enabled',
+            'auto_grade',
             'instructions_with_rubric',
             'instructions_without_rubric',
             'rubricfile',
