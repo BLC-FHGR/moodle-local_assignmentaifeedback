@@ -26,7 +26,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_aigrade';
-$plugin->version = 2026082007;  // YYYYMMDDXX format (2026-08-27, version 07)
+$plugin->version = 2026082008;  // YYYYMMDDXX format (2026-08-27, version 08)
 $plugin->requires = 2024042200;  // Moodle 4.5
 $plugin->maturity = MATURITY_BETA;
-$plugin->release = 'v2.4.0-fhgr';
+$plugin->release = 'v2.4.1-fhgr';

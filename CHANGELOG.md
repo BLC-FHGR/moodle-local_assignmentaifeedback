@@ -3,6 +3,12 @@
 Änderungen an der FHGR-Fassung. Versionsangaben beziehen sich auf `local_aigrade`
 (sofern nicht anders vermerkt).
 
+## v2.4.1-fhgr — 2026-08-27
+**Fix:** Ad-hoc-Task schlug fehl mit „Call to undefined function
+local_aigrade\task\cron_setup_user()". In Moodle 4.4+ existiert die globale Funktion
+`cron_setup_user()` nicht mehr; der Task nutzt jetzt `\core\cron::setup_user()`
+(mit Fallback auf die alte globale Funktion für ältere Versionen).
+
 ## v2.4.0-fhgr — 2026-08-27 (Idee A)
 **Feature:** Automatische KI-Bewertung bei Abgabe (opt-in, asynchron).
 - Neue Checkbox „Automatisch bei Abgabe bewerten" pro Aufgabe (`auto_grade`).

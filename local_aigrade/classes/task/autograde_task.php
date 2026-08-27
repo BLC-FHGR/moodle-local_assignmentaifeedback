@@ -75,7 +75,7 @@ class autograde_task extends \core\task\adhoc_task {
         }
 
         // Run as that user (so capability/quota checks apply to a real account).
-        cron_setup_user($graderuser, $course);
+        self::setup_user($graderuser, $course);
 
         try {
             $assignment = new \assign($context, $cm, $course);
@@ -93,7 +93,22 @@ class autograde_task extends \core\task\adhoc_task {
                 mtrace('local_aigrade autograde: userid=' . $data->userid . ' done.');
             }
         } finally {
-            cron_setup_user();
+            self::setup_user(null, null);
+        }
+    }
+
+    /**
+     * Set the current user for the duration of the task, tolerant to Moodle
+     * versions (\core\cron::setup_user in 4.4+, global cron_setup_user before).
+     *
+     * @param \stdClass|null $user
+     * @param \stdClass|null $course
+     */
+    private static function setup_user($user, $course) {
+        if (class_exists('\\core\\cron') && method_exists('\\core\\cron', 'setup_user')) {
+            \core\cron::setup_user($user, $course);
+        } else if (function_exists('cron_setup_user')) {
+            cron_setup_user($user, $course);
         }
     }
 
