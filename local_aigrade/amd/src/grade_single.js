@@ -14,7 +14,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * AMD module for AI Grade single submission button and feedback side panel
+ * AMD module for AI Grade single submission button and feedback side panel.
+ *
+ * The AI feedback is stored in the plugin's own table (advisory only) and shown
+ * read-only in a side panel; it is NOT written into Moodle's feedback comment
+ * field. Teachers can adopt it explicitly via the "apply" button.
  *
  * @module     local_aigrade/grade_single
  * @copyright  2025 Brian A. Pool, National Trail Local Schools
@@ -26,31 +30,35 @@ define(['jquery'], function($) {
 
     return {
         /**
-         * Initialize the grade single button and feedback panel.
-         * @param {string} buttonUrl The URL for the AJAX request
-         * @param {string} buttonText The text to display on the button
-         * @param {string} sesskey The session key
-         * @param {Object} strings Localised UI strings
+         * @param {string} buttonUrl   AJAX URL for grading
+         * @param {string} buttonText  Button label
+         * @param {string} sesskey     Session key
+         * @param {Object} strings     Localised UI strings
+         * @param {string} feedbackUrl AJAX URL to fetch stored feedback
          */
-        init: function(buttonUrl, buttonText, sesskey, strings) {
+        init: function(buttonUrl, buttonText, sesskey, strings, feedbackUrl) {
 
             strings = strings || {};
 
-            // Tracks the feedback HTML currently shown in the panel, to avoid
-            // needless re-rendering (which would reset scroll position).
-            var lastRendered = null;
+            // The feedback currently shown in the panel (for the "apply" button).
+            var currentFeedbackHtml = '';
+            // The userid the panel currently reflects, to detect submission switches.
+            var loadedUserid = null;
 
             var getUserId = function() {
                 var urlParams = new URLSearchParams(window.location.search);
                 return urlParams.get('userid') || '0';
             };
 
-            // Read the current submission's feedback content from the native
-            // "Feedback comments" editor. This is the single source of truth:
-            // the panel always mirrors whatever belongs to the displayed
-            // submission, so switching submissions never shows stale text.
+            var isEmptyContent = function(html) {
+                if (!html) {
+                    return true;
+                }
+                return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, ' ').trim().length === 0;
+            };
+
+            // Read the current content of Moodle's feedback comments editor.
             var readFeedbackContent = function() {
-                // 1) Live TinyMCE editor (Moodle 4.x default).
                 try {
                     if (window.tinyMCE && window.tinyMCE.editors) {
                         var eds = window.tinyMCE.editors;
@@ -61,50 +69,15 @@ define(['jquery'], function($) {
                         }
                     }
                 } catch (e) {
-                    // Ignore and fall through to the DOM-based fallbacks.
+                    // Fall through to DOM.
                 }
-                // 2) Underlying textarea (server-rendered value on load, Atto sync).
                 var ta = document.querySelector('textarea[name="assignfeedbackcomments_editor[text]"]');
                 if (ta && typeof ta.value === 'string') {
                     return ta.value;
                 }
-                // 3) Generic contenteditable fallback.
-                var ce = document.querySelector('[id*="assignfeedbackcomments"] [contenteditable="true"]');
-                if (ce) {
-                    return ce.innerHTML;
-                }
                 return '';
             };
 
-            // Treat markup that carries no visible text (e.g. "<p>&nbsp;</p>") as empty.
-            var isEmptyContent = function(html) {
-                if (!html) {
-                    return true;
-                }
-                var text = html.replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, ' ').trim();
-                return text.length === 0;
-            };
-
-            // Whether the user is currently editing the feedback field; if so we
-            // do not touch the panel, to avoid disturbing their editing.
-            var feedbackHasFocus = function() {
-                var ae = document.activeElement;
-                if (!ae) {
-                    return false;
-                }
-                if (ae.tagName === 'IFRAME' && ae.id && ae.id.indexOf('assignfeedbackcomments') > -1) {
-                    return true;
-                }
-                if (ae.getAttribute && ae.getAttribute('name') === 'assignfeedbackcomments_editor[text]') {
-                    return true;
-                }
-                if (ae.closest && ae.closest('[id*="assignfeedbackcomments"]')) {
-                    return true;
-                }
-                return false;
-            };
-
-            // Scroll the native feedback comments field into view (for editing/saving).
             var jumpToFeedbackField = function() {
                 var target = document.querySelector(
                     '[id^="fitem_id_assignfeedbackcomments"], [id*="assignfeedbackcomments_editor"]'
@@ -112,6 +85,51 @@ define(['jquery'], function($) {
                 if (target && target.scrollIntoView) {
                     target.scrollIntoView({behavior: 'smooth', block: 'center'});
                 }
+            };
+
+            // Copy the AI feedback into Moodle's feedback comments field on demand.
+            var applyToFeedbackField = function() {
+                if (!currentFeedbackHtml) {
+                    return;
+                }
+                if (!isEmptyContent(readFeedbackContent())) {
+                    if (!confirm(strings.applyconfirm ||
+                            'The feedback field already contains text. Overwrite it with the AI feedback?')) {
+                        return;
+                    }
+                }
+                var handled = false;
+                try {
+                    if (window.tinyMCE && window.tinyMCE.editors) {
+                        var eds = window.tinyMCE.editors;
+                        for (var i = 0; i < eds.length; i++) {
+                            if (eds[i] && eds[i].id && eds[i].id.indexOf('assignfeedbackcomments') > -1) {
+                                eds[i].setContent(currentFeedbackHtml);
+                                if (typeof eds[i].save === 'function') {
+                                    eds[i].save(); // Sync into the underlying textarea.
+                                }
+                                handled = true;
+                                break;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    handled = false;
+                }
+                if (!handled) {
+                    var ta = document.querySelector('textarea[name="assignfeedbackcomments_editor[text]"]');
+                    if (ta) {
+                        ta.value = currentFeedbackHtml;
+                        handled = true;
+                    } else {
+                        var ce = document.querySelector('[id*="assignfeedbackcomments"] [contenteditable="true"]');
+                        if (ce) {
+                            ce.innerHTML = currentFeedbackHtml;
+                            handled = true;
+                        }
+                    }
+                }
+                jumpToFeedbackField();
             };
 
             var buildPanel = function() {
@@ -126,18 +144,6 @@ define(['jquery'], function($) {
                 title.className = 'aigrade-feedback-panel-title';
                 title.textContent = strings.paneltitle || 'KI-Feedback';
 
-                var actions = document.createElement('span');
-                actions.className = 'aigrade-feedback-panel-actions';
-
-                var jump = document.createElement('button');
-                jump.type = 'button';
-                jump.className = 'btn btn-link btn-sm aigrade-feedback-panel-jump';
-                jump.textContent = strings.paneljump || 'Zum Feedback-Feld';
-                jump.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    jumpToFeedbackField();
-                });
-
                 var toggle = document.createElement('button');
                 toggle.type = 'button';
                 toggle.className = 'btn btn-sm aigrade-feedback-panel-toggle';
@@ -148,21 +154,45 @@ define(['jquery'], function($) {
                     toggle.textContent = panel.classList.contains('aigrade-collapsed') ? '⟨' : '⟩';
                 });
 
-                actions.appendChild(jump);
-                actions.appendChild(toggle);
                 header.appendChild(title);
-                header.appendChild(actions);
+                header.appendChild(toggle);
+
+                // Toolbar with the actions (kept out of the header so the long
+                // "apply" label does not overflow the narrow panel).
+                var toolbar = document.createElement('div');
+                toolbar.className = 'aigrade-feedback-panel-toolbar';
+
+                var apply = document.createElement('button');
+                apply.type = 'button';
+                apply.className = 'btn btn-secondary btn-sm aigrade-feedback-panel-apply';
+                apply.textContent = strings.apply || 'Ins Feedback-Feld übernehmen';
+                apply.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    applyToFeedbackField();
+                });
+
+                var jump = document.createElement('button');
+                jump.type = 'button';
+                jump.className = 'btn btn-link btn-sm aigrade-feedback-panel-jump';
+                jump.textContent = strings.paneljump || 'Zum Feedback-Feld';
+                jump.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    jumpToFeedbackField();
+                });
+
+                toolbar.appendChild(apply);
+                toolbar.appendChild(jump);
 
                 var body = document.createElement('div');
                 body.className = 'aigrade-feedback-panel-body';
 
                 panel.appendChild(header);
+                panel.appendChild(toolbar);
                 panel.appendChild(body);
                 document.body.appendChild(panel);
                 return panel;
             };
 
-            // Show the panel with the given HTML (creating it on first use).
             var showPanel = function(html) {
                 var panel = document.getElementById('aigrade-feedback-panel') || buildPanel();
                 panel.querySelector('.aigrade-feedback-panel-body').innerHTML = html;
@@ -177,33 +207,49 @@ define(['jquery'], function($) {
                 }
             };
 
-            // Keep the panel in sync with the current submission's feedback field.
-            var syncPanel = function() {
-                // Never disturb the user while they edit the feedback field.
-                if (feedbackHasFocus()) {
+            // Load the stored AI feedback for a given submission and show/hide the panel.
+            var loadFeedbackFor = function(userid) {
+                loadedUserid = userid;
+                if (!feedbackUrl) {
                     return;
                 }
-                var html = readFeedbackContent();
-                if (isEmptyContent(html)) {
-                    if (lastRendered !== '') {
+                $.ajax({
+                    url: feedbackUrl + '&userid=' + userid + '&sesskey=' + sesskey,
+                    method: 'GET',
+                    dataType: 'json',
+                    success: function(response) {
+                        // Ignore stale responses if the user navigated on in the meantime.
+                        if (userid !== getUserId()) {
+                            return;
+                        }
+                        if (response && response.success && response.feedback && !isEmptyContent(response.feedback)) {
+                            currentFeedbackHtml = response.feedback;
+                            showPanel(response.feedback);
+                        } else {
+                            currentFeedbackHtml = '';
+                            hidePanel();
+                        }
+                    },
+                    error: function() {
+                        currentFeedbackHtml = '';
                         hidePanel();
-                        lastRendered = '';
                     }
-                    return;
-                }
-                if (html !== lastRendered) {
-                    showPanel(html);
-                    lastRendered = html;
+                });
+            };
+
+            // Re-load the panel whenever the displayed submission changes.
+            var syncToCurrentSubmission = function() {
+                var uid = getUserId();
+                if (uid !== loadedUserid) {
+                    loadFeedbackFor(uid);
                 }
             };
 
             var insertButton = function() {
-                // Don't insert if button already exists
                 if ($('.aigrade-single-button').length > 0) {
                     return true;
                 }
 
-                // Create the button
                 var button = $('<button>')
                     .attr('type', 'button')
                     .addClass('btn btn-primary aigrade-single-button')
@@ -230,12 +276,17 @@ define(['jquery'], function($) {
                             dataType: 'json',
                             success: function(response) {
                                 if (response.success) {
-                                    // The feedback has been saved to the comment field
-                                    // server-side; reload so the field (and thus the
-                                    // synced panel) reflect the saved content.
-                                    window.location.reload();
+                                    // Show the new suggestion directly in the panel; nothing
+                                    // is written to the feedback field (advisory only).
+                                    if (response.feedback) {
+                                        currentFeedbackHtml = response.feedback;
+                                        loadedUserid = currentUserid;
+                                        showPanel(response.feedback);
+                                    }
+                                    btn.prop('disabled', false).text(originalText);
+                                    btn.data('force-regrade', false)
+                                        .removeClass('btn-warning').addClass('btn-primary');
                                 } else if (response.already_graded) {
-                                    // Feedback already exists for this submission.
                                     btn.prop('disabled', false);
                                     btn.text(strings.regrade || 'Regrade with AI');
                                     btn.removeClass('btn-primary').addClass('btn-warning');
@@ -262,10 +313,8 @@ define(['jquery'], function($) {
                     .addClass('local_aigrade-button-container')
                     .append(button);
 
-                // Try multiple insertion points in order of preference
                 var inserted = false;
 
-                // Option 1: After grade input row (preferred - puts it right after the grade field)
                 var gradeInput = $('input[name="grade"]');
                 if (gradeInput.length) {
                     var gradeRow = gradeInput.closest('.row, .fitem');
@@ -275,7 +324,6 @@ define(['jquery'], function($) {
                     }
                 }
 
-                // Option 2: Before feedback section (if grade input not found)
                 if (!inserted) {
                     var feedbackSection = $('div[id*="fitem_id_assignfeedbackcomments"]');
                     if (feedbackSection.length) {
@@ -284,7 +332,6 @@ define(['jquery'], function($) {
                     }
                 }
 
-                // Option 3: Inside grade panel
                 if (!inserted) {
                     var gradePanel = $('[data-region="grade-panel"]');
                     if (gradePanel.length) {
@@ -293,7 +340,6 @@ define(['jquery'], function($) {
                     }
                 }
 
-                // Option 4: Fallback to main content area
                 if (!inserted) {
                     var mainContent = $('#region-main-box, #region-main, [role="main"]').first();
                     if (mainContent.length) {
@@ -305,21 +351,19 @@ define(['jquery'], function($) {
                 return inserted;
             };
 
-            // Initial insertion + sync.
             setTimeout(insertButton, 100);
-            setTimeout(syncPanel, 400);
+            setTimeout(syncToCurrentSubmission, 400);
 
             $(document).ready(function() {
                 setTimeout(insertButton, 100);
-                setTimeout(syncPanel, 400);
+                setTimeout(syncToCurrentSubmission, 400);
             });
 
             $(window).on('load', function() {
                 setTimeout(insertButton, 200);
-                setTimeout(syncPanel, 500);
+                setTimeout(syncToCurrentSubmission, 500);
             });
 
-            // Re-insert the button when the grader swaps content dynamically.
             var observer = new MutationObserver(function() {
                 insertButton();
             });
@@ -327,15 +371,12 @@ define(['jquery'], function($) {
 
             $(document).ajaxComplete(function() {
                 setTimeout(insertButton, 100);
-                setTimeout(syncPanel, 200);
+                setTimeout(syncToCurrentSubmission, 200);
             });
 
-            // Continuously keep the panel mirrored to the current submission's
-            // feedback field (covers AJAX navigation between submissions, where
-            // no full page reload happens).
-            setInterval(syncPanel, 1000);
+            // Detect submission switches (also when navigation does not reload the page).
+            setInterval(syncToCurrentSubmission, 1000);
 
-            // Button insertion fallback for the first few seconds.
             var checkCount = 0;
             var checkInterval = setInterval(function() {
                 checkCount++;

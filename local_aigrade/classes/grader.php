@@ -356,28 +356,22 @@ class grader {
     }
 
     /**
-     * Whether a feedback comment already exists for this user.
+     * Whether an AI feedback suggestion already exists for this user.
      *
-     * Because this plugin no longer writes a numeric grade, the presence of a
-     * feedback comment is used to detect whether a submission was already
-     * processed. This also protects manually written feedback from being
-     * overwritten by the bulk grader.
+     * The AI feedback is stored in the plugin's own table (advisory only, never
+     * in the official feedback field), so its presence is used to detect whether
+     * a submission was already processed and to let the bulk grader skip it.
      *
      * @param int $userid
      * @return bool
      */
     private function has_ai_feedback($userid) {
-        $grade = $this->assignment->get_user_grade($userid, false);
-        if (!$grade) {
-            return false;
-        }
+        global $DB;
 
-        $plugin = $this->assignment->get_feedback_plugin_by_type('comments');
-        if (!$plugin || !$plugin->is_enabled()) {
-            return false;
-        }
-
-        return !$plugin->is_empty($grade);
+        return $DB->record_exists('local_aigrade_feedback', [
+            'assignmentid' => $this->assignment->get_instance()->id,
+            'userid'       => $userid,
+        ]);
     }
 
     /**
@@ -691,26 +685,53 @@ class grader {
      * @return bool Success status
      */
     private function save_feedback($userid, $feedback) {
-        global $USER;
+        global $DB;
 
-        $feedback = trim($feedback);
+        $feedback     = trim($feedback);
+        $assignmentid = $this->assignment->get_instance()->id;
+        $now          = time();
 
-        // Ensure a grade record exists to attach the feedback comment to,
-        // but leave the numeric grade untouched (no gradebook entry).
-        $grade         = $this->assignment->get_user_grade($userid, true);
-        $grade->grader = $USER->id;
+        // The AI feedback is a non-binding suggestion. It is stored in the
+        // plugin's own table only and is NOT written into Moodle's feedback
+        // comment field, so it can never be saved as the official feedback by
+        // accident. Teachers can adopt it explicitly via the panel button.
+        $existing = $DB->get_record('local_aigrade_feedback', [
+            'assignmentid' => $assignmentid,
+            'userid'       => $userid,
+        ]);
 
-        $plugin = $this->assignment->get_feedback_plugin_by_type('comments');
-        if ($plugin && $plugin->is_enabled()) {
-            $grade_data = new \stdClass();
-            $grade_data->assignfeedbackcomments_editor = [
-                'text'   => $feedback,
-                'format' => FORMAT_HTML,
-            ];
-
-            $plugin->save($grade, $grade_data);
+        if ($existing) {
+            $existing->feedback     = $feedback;
+            $existing->timemodified = $now;
+            $DB->update_record('local_aigrade_feedback', $existing);
+        } else {
+            $record = new \stdClass();
+            $record->assignmentid = $assignmentid;
+            $record->userid       = $userid;
+            $record->feedback     = $feedback;
+            $record->timecreated  = $now;
+            $record->timemodified = $now;
+            $DB->insert_record('local_aigrade_feedback', $record);
         }
 
         return true;
+    }
+
+    /**
+     * Fetch the stored AI feedback suggestion for a submission.
+     *
+     * @param int $assignmentid
+     * @param int $userid
+     * @return string The stored feedback HTML, or empty string if none
+     */
+    public static function get_stored_feedback($assignmentid, $userid) {
+        global $DB;
+
+        $record = $DB->get_record('local_aigrade_feedback', [
+            'assignmentid' => $assignmentid,
+            'userid'       => $userid,
+        ]);
+
+        return $record ? (string) $record->feedback : '';
     }
 }

@@ -125,6 +125,8 @@ $string['js_error_server'] = 'Fehler bei der Kommunikation mit dem Server: ';
 $string['js_panel_title'] = '{$a}-Feedback';
 $string['js_panel_jump'] = 'Zum Feedback-Feld';
 $string['js_panel_collapse'] = 'Ein-/ausklappen';
+$string['js_panel_apply'] = 'Ins Feedback-Feld übernehmen';
+$string['js_panel_apply_confirm'] = 'Das Feedback-Feld enthält bereits Text. Mit dem KI-Feedback überschreiben?';
 
 // Datenschutz (Privacy API).
 $string['privacy:metadata:ai_provider'] = 'Zur Bewertungsanalyse werden Inhalte an den in Moodle konfigurierten KI-Anbieter übermittelt. Diese Daten werden vom externen KI-Dienst verarbeitet, aber von diesem Plugin nicht dauerhaft gespeichert.';
@@ -132,3 +134,9 @@ $string['privacy:metadata:ai_provider:submissiontext'] = 'Der Textinhalt der Abg
 $string['privacy:metadata:ai_provider:assignmentname'] = 'Der Name der Aufgabe, der zur Kontextgebung an den KI-Anbieter übermittelt wird.';
 $string['privacy:metadata:ai_provider:assignmentinstructions'] = 'Die Aufgabenstellung, die zur Bewertungsgrundlage an den KI-Anbieter übermittelt wird.';
 $string['privacy:metadata:ai_provider:rubric'] = 'Das Beurteilungsraster (falls hochgeladen), das zur Steuerung der Bewertung an den KI-Anbieter übermittelt wird.';
+$string['privacy:metadata:local_aigrade_feedback'] = 'Vom Plugin gespeicherte KI-Feedback-Vorschläge (nur als Hilfestellung, nicht die offizielle Rückmeldung).';
+$string['privacy:metadata:local_aigrade_feedback:userid'] = 'Die ID der studierenden Person, zu deren Abgabe der Vorschlag gehört.';
+$string['privacy:metadata:local_aigrade_feedback:feedback'] = 'Der von der KI erzeugte Feedback-Vorschlag.';
+$string['privacy:metadata:local_aigrade_feedback:timecreated'] = 'Zeitpunkt der Erstellung des Vorschlags.';
+$string['privacy:metadata:local_aigrade_feedback:timemodified'] = 'Zeitpunkt der letzten Aktualisierung des Vorschlags.';
+$string['privacy:aifeedbackpath'] = 'KI-Feedback-Vorschlag';

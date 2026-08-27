@@ -19,13 +19,21 @@
  *
  * @package    local_aigrade
  * @copyright  2025 Brian A. Pool, National Trail Local Schools
+ * @copyright  2026 Anpassung Hochschulkontext FH Graubünden
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace local_aigrade\privacy;
 
+use context;
+use context_module;
 use core_privacy\local\metadata\collection;
+use core_privacy\local\request\approved_contextlist;
+use core_privacy\local\request\approved_userlist;
 use core_privacy\local\request\contextlist;
+use core_privacy\local\request\userlist;
+use core_privacy\local\request\writer;
+use core_privacy\local\request\transform;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -33,8 +41,10 @@ defined('MOODLE_INTERNAL') || die();
  * Privacy Subsystem for local_aigrade.
  */
 class provider implements
-    \core_privacy\local\metadata\provider {
-    
+    \core_privacy\local\metadata\provider,
+    \core_privacy\local\request\plugin\provider,
+    \core_privacy\local\request\core_userlist_provider {
+
     /**
      * Returns meta data about this system.
      *
@@ -42,8 +52,8 @@ class provider implements
      * @return collection A listing of user data stored through this system.
      */
     public static function get_metadata(collection $collection): collection {
-        
-        // Data sent to external AI providers
+
+        // Data sent to external AI providers.
         $collection->add_external_location_link('ai_provider', [
             'submissiontext' => 'privacy:metadata:ai_provider:submissiontext',
             'assignmentname' => 'privacy:metadata:ai_provider:assignmentname',
@@ -51,6 +61,177 @@ class provider implements
             'rubric' => 'privacy:metadata:ai_provider:rubric',
         ], 'privacy:metadata:ai_provider');
 
+        // Stored AI feedback suggestions.
+        $collection->add_database_table('local_aigrade_feedback', [
+            'userid' => 'privacy:metadata:local_aigrade_feedback:userid',
+            'feedback' => 'privacy:metadata:local_aigrade_feedback:feedback',
+            'timecreated' => 'privacy:metadata:local_aigrade_feedback:timecreated',
+            'timemodified' => 'privacy:metadata:local_aigrade_feedback:timemodified',
+        ], 'privacy:metadata:local_aigrade_feedback');
+
         return $collection;
+    }
+
+    /**
+     * Get the list of contexts that contain user information for the specified user.
+     *
+     * @param int $userid The user to search.
+     * @return contextlist The contextlist containing the list of contexts used in this plugin.
+     */
+    public static function get_contexts_for_userid(int $userid): contextlist {
+        $contextlist = new contextlist();
+
+        $sql = "SELECT ctx.id
+                  FROM {local_aigrade_feedback} f
+                  JOIN {course_modules} cm ON cm.instance = f.assignmentid AND cm.module = :modid
+                  JOIN {context} ctx ON ctx.instanceid = cm.id AND ctx.contextlevel = :modlevel
+                 WHERE f.userid = :userid";
+        $params = [
+            'modid' => self::get_assign_moduleid(),
+            'modlevel' => CONTEXT_MODULE,
+            'userid' => $userid,
+        ];
+        $contextlist->add_from_sql($sql, $params);
+
+        return $contextlist;
+    }
+
+    /**
+     * Get the list of users who have data within a context.
+     *
+     * @param userlist $userlist The userlist containing the list of users who have data in this context/plugin combination.
+     */
+    public static function get_users_in_context(userlist $userlist): void {
+        $context = $userlist->get_context();
+        if (!$context instanceof context_module) {
+            return;
+        }
+
+        $sql = "SELECT f.userid
+                  FROM {local_aigrade_feedback} f
+                  JOIN {course_modules} cm ON cm.instance = f.assignmentid AND cm.module = :modid
+                 WHERE cm.id = :cmid";
+        $params = ['modid' => self::get_assign_moduleid(), 'cmid' => $context->instanceid];
+        $userlist->add_from_sql('userid', $sql, $params);
+    }
+
+    /**
+     * Export all user data for the specified user, in the specified contexts.
+     *
+     * @param approved_contextlist $contextlist The approved contexts to export information for.
+     */
+    public static function export_user_data(approved_contextlist $contextlist): void {
+        global $DB;
+
+        $userid = $contextlist->get_user()->id;
+
+        foreach ($contextlist->get_contexts() as $context) {
+            if (!$context instanceof context_module) {
+                continue;
+            }
+            $assignmentid = self::get_assignmentid_from_context($context);
+            if (!$assignmentid) {
+                continue;
+            }
+            $record = $DB->get_record('local_aigrade_feedback',
+                ['assignmentid' => $assignmentid, 'userid' => $userid]);
+            if (!$record) {
+                continue;
+            }
+            $data = (object) [
+                'feedback' => format_text($record->feedback, FORMAT_HTML),
+                'timecreated' => transform::datetime($record->timecreated),
+                'timemodified' => transform::datetime($record->timemodified),
+            ];
+            writer::with_context($context)->export_data(
+                [get_string('privacy:aifeedbackpath', 'local_aigrade')], $data);
+        }
+    }
+
+    /**
+     * Delete all data for all users in the specified context.
+     *
+     * @param context $context The specific context to delete data for.
+     */
+    public static function delete_data_for_all_users_in_context(context $context): void {
+        global $DB;
+
+        if (!$context instanceof context_module) {
+            return;
+        }
+        $assignmentid = self::get_assignmentid_from_context($context);
+        if ($assignmentid) {
+            $DB->delete_records('local_aigrade_feedback', ['assignmentid' => $assignmentid]);
+        }
+    }
+
+    /**
+     * Delete all user data for the specified user, in the specified contexts.
+     *
+     * @param approved_contextlist $contextlist The approved contexts and user to delete information for.
+     */
+    public static function delete_data_for_user(approved_contextlist $contextlist): void {
+        global $DB;
+
+        $userid = $contextlist->get_user()->id;
+
+        foreach ($contextlist->get_contexts() as $context) {
+            if (!$context instanceof context_module) {
+                continue;
+            }
+            $assignmentid = self::get_assignmentid_from_context($context);
+            if ($assignmentid) {
+                $DB->delete_records('local_aigrade_feedback',
+                    ['assignmentid' => $assignmentid, 'userid' => $userid]);
+            }
+        }
+    }
+
+    /**
+     * Delete multiple users' data within a single context.
+     *
+     * @param approved_userlist $userlist The approved context and user information to delete information for.
+     */
+    public static function delete_data_for_users(approved_userlist $userlist): void {
+        global $DB;
+
+        $context = $userlist->get_context();
+        if (!$context instanceof context_module) {
+            return;
+        }
+        $assignmentid = self::get_assignmentid_from_context($context);
+        if (!$assignmentid) {
+            return;
+        }
+        $userids = $userlist->get_userids();
+        if (empty($userids)) {
+            return;
+        }
+        [$insql, $inparams] = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
+        $params = array_merge(['assignmentid' => $assignmentid], $inparams);
+        $DB->delete_records_select('local_aigrade_feedback',
+            "assignmentid = :assignmentid AND userid $insql", $params);
+    }
+
+    /**
+     * Module id of the assign module.
+     *
+     * @return int
+     */
+    private static function get_assign_moduleid(): int {
+        global $DB;
+        return (int) $DB->get_field('modules', 'id', ['name' => 'assign']);
+    }
+
+    /**
+     * Resolve the assign instance id from a module context.
+     *
+     * @param context_module $context
+     * @return int|null
+     */
+    private static function get_assignmentid_from_context(context_module $context): ?int {
+        global $DB;
+        $instance = $DB->get_field('course_modules', 'instance', ['id' => $context->instanceid]);
+        return $instance ? (int) $instance : null;
     }
 }

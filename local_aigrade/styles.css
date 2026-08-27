@@ -88,6 +88,16 @@
     line-height: 1.4;
 }
 
+.aigrade-feedback-panel-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    padding: 6px 12px;
+    border-bottom: 1px solid #e0e0e0;
+    background-color: #f7fbfd;
+}
+
 .aigrade-feedback-panel-body {
     padding: 12px 16px;
     overflow-y: auto;
@@ -116,7 +126,7 @@
 }
 
 .aigrade-feedback-panel.aigrade-collapsed .aigrade-feedback-panel-body,
-.aigrade-feedback-panel.aigrade-collapsed .aigrade-feedback-panel-jump {
+.aigrade-feedback-panel.aigrade-collapsed .aigrade-feedback-panel-toolbar {
     display: none;
 }
 

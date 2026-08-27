@@ -294,13 +294,18 @@ function local_aigrade_before_footer() {
             'paneltitle'      => get_string('js_panel_title', 'local_aigrade', $ai_name),
             'paneljump'       => get_string('js_panel_jump', 'local_aigrade'),
             'panelcollapse'   => get_string('js_panel_collapse', 'local_aigrade'),
+            'apply'           => get_string('js_panel_apply', 'local_aigrade'),
+            'applyconfirm'    => get_string('js_panel_apply_confirm', 'local_aigrade'),
         ];
+
+        $feedbackurl = new moodle_url('/local/aigrade/get_feedback.php', ['id' => $cm->id]);
 
         $PAGE->requires->js_call_amd('local_aigrade/grade_single', 'init', [
             $url->out(false),
             $button_text,
             $sesskey,
-            $strings
+            $strings,
+            $feedbackurl->out(false)
         ]);
     } else {
         $url = new moodle_url('/local/aigrade/grade.php', ['id' => $cm->id]);

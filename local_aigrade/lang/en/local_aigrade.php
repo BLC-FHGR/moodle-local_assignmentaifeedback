@@ -126,6 +126,8 @@ $string['js_error_server'] = 'Error communicating with the server: ';
 $string['js_panel_title'] = '{$a} feedback';
 $string['js_panel_jump'] = 'Go to feedback field';
 $string['js_panel_collapse'] = 'Collapse/expand';
+$string['js_panel_apply'] = 'Copy to feedback field';
+$string['js_panel_apply_confirm'] = 'The feedback field already contains text. Overwrite it with the AI feedback?';
 
 // Privacy (Privacy API).
 $string['privacy:metadata:ai_provider'] = 'To perform grading analysis, content is sent to the AI provider configured in Moodle. This data is processed by the external AI service but not permanently stored by this plugin.';
@@ -133,3 +135,9 @@ $string['privacy:metadata:ai_provider:submissiontext'] = 'The text content of th
 $string['privacy:metadata:ai_provider:assignmentname'] = 'The name of the assignment, sent to provide context to the AI provider.';
 $string['privacy:metadata:ai_provider:assignmentinstructions'] = 'The assignment instructions, sent as grading criteria to the AI provider.';
 $string['privacy:metadata:ai_provider:rubric'] = 'The grading rubric (if uploaded), sent to guide the AI evaluation.';
+$string['privacy:metadata:local_aigrade_feedback'] = 'AI feedback suggestions stored by the plugin (advisory only, not the official feedback).';
+$string['privacy:metadata:local_aigrade_feedback:userid'] = 'The ID of the student whose submission the suggestion belongs to.';
+$string['privacy:metadata:local_aigrade_feedback:feedback'] = 'The AI-generated feedback suggestion.';
+$string['privacy:metadata:local_aigrade_feedback:timecreated'] = 'Time the suggestion was created.';
+$string['privacy:metadata:local_aigrade_feedback:timemodified'] = 'Time the suggestion was last updated.';
+$string['privacy:aifeedbackpath'] = 'AI feedback suggestion';

@@ -153,5 +153,31 @@ function xmldb_local_aigrade_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026082000, 'local', 'aigrade');
     }
 
+    if ($oldversion < 2026082004) {
+        // New table storing AI feedback suggestions separately from Moodle's
+        // official feedback field (advisory only). See classes/grader.php.
+        $table = new xmldb_table('local_aigrade_feedback');
+
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('assignmentid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('feedback', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('model', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('assignmentid', XMLDB_KEY_FOREIGN, ['assignmentid'], 'assign', ['id']);
+        $table->add_key('userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
+        $table->add_index('assignmentuser', XMLDB_INDEX_UNIQUE, ['assignmentid', 'userid']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Aigrade savepoint reached.
+        upgrade_plugin_savepoint(true, 2026082004, 'local', 'aigrade');
+    }
+
     return true;
 }

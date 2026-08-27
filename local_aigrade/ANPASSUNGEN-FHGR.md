@@ -100,6 +100,29 @@ leer, ist auch das Panel leer (kein Rest-Feedback der vorherigen Abgabe mehr). Q
 Wahrheit ist der TinyMCE-Editor bzw. das Textarea des Feedback-Kommentars; während aktiver
 Bearbeitung (Feld hat Fokus) wird das Panel nicht angetastet.
 
+## Nachträglich ergänzt (v2.3.0): Feedback nur ins Panel, eigener Speicher, „Übernehmen"-Button
+
+Umsetzung von Idee B (Benutzerfreundlichkeit + Sicherheit):
+
+- **Kein Schreiben mehr ins Moodle-Kommentarfeld.** Das KI-Feedback ist ein
+  **unverbindlicher Vorschlag** und wird ausschließlich in einer **eigenen Tabelle**
+  `local_aigrade_feedback` (pro Aufgabe + Studierende:r) gespeichert. Damit kann es
+  **nicht mehr versehentlich als offizielle Rückmeldung mitgespeichert** werden.
+- **Panel lädt pro Abgabe** das gespeicherte Feedback über den neuen AJAX-Endpunkt
+  `get_feedback.php`. Beim **Wechsel zwischen Abgaben** wird automatisch das Feedback der
+  jeweils angezeigten Arbeit geladen (bzw. das Panel geleert, wenn keines vorliegt).
+- **„Ins Feedback-Feld übernehmen"-Button** im Panel: übernimmt den Vorschlag auf
+  ausdrücklichen Klick in Moodles Feedback-Editor (mit Überschreib-Nachfrage, falls dort
+  bereits Text steht). Gespeichert wird weiterhin nur durch die Dozierenden selbst.
+- **„Bereits bewertet"-Erkennung** (Einzel-/Sammelbewertung) basiert jetzt auf der neuen
+  Tabelle statt auf dem Kommentarfeld.
+- **Datenschutz**: Privacy-Provider erweitert (Metadaten + Export/Löschung der neuen
+  Tabelle, inkl. userlist-Provider).
+- Neue Dateien/Änderungen: `db/install.xml` + `db/upgrade.php` (Tabelle), `get_feedback.php`,
+  `classes/grader.php` (`save_feedback`/`has_ai_feedback`/`get_stored_feedback`),
+  `classes/privacy/provider.php`, `lib.php`, `amd/src|build/grade_single.js`, `styles.css`,
+  Sprach-Strings `js_panel_apply`, `js_panel_apply_confirm`.
+
 ## Betroffene Dateien
 `classes/grader.php`, `lib.php`, `settings.php`, `db/install.xml`, `db/upgrade.php`,
 `classes/privacy/provider.php`, `version.php`, `lang/de/…` (neu), `lang/en/…`,
