@@ -127,6 +127,7 @@ $string['js_panel_jump'] = 'Zum Feedback-Feld';
 $string['js_panel_collapse'] = 'Ein-/ausklappen';
 $string['js_panel_apply'] = 'Ins Feedback-Feld übernehmen';
 $string['js_panel_apply_confirm'] = 'Das Feedback-Feld enthält bereits Text. Mit dem KI-Feedback überschreiben?';
+$string['js_panel_apply_failed'] = 'Das Feedback-Feld konnte nicht gefunden werden. Bitte kopieren Sie den Text manuell.';
 
 // Datenschutz (Privacy API).
 $string['privacy:metadata:ai_provider'] = 'Zur Bewertungsanalyse werden Inhalte an den in Moodle konfigurierten KI-Anbieter übermittelt. Diese Daten werden vom externen KI-Dienst verarbeitet, aber von diesem Plugin nicht dauerhaft gespeichert.';

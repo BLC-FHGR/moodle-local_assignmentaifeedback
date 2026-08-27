@@ -128,6 +128,7 @@ $string['js_panel_jump'] = 'Go to feedback field';
 $string['js_panel_collapse'] = 'Collapse/expand';
 $string['js_panel_apply'] = 'Copy to feedback field';
 $string['js_panel_apply_confirm'] = 'The feedback field already contains text. Overwrite it with the AI feedback?';
+$string['js_panel_apply_failed'] = 'The feedback field could not be found. Please copy the text manually.';
 
 // Privacy (Privacy API).
 $string['privacy:metadata:ai_provider'] = 'To perform grading analysis, content is sent to the AI provider configured in Moodle. This data is processed by the external AI service but not permanently stored by this plugin.';

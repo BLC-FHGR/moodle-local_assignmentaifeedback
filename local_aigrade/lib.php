@@ -296,6 +296,7 @@ function local_aigrade_before_footer() {
             'panelcollapse'   => get_string('js_panel_collapse', 'local_aigrade'),
             'apply'           => get_string('js_panel_apply', 'local_aigrade'),
             'applyconfirm'    => get_string('js_panel_apply_confirm', 'local_aigrade'),
+            'applyfailed'     => get_string('js_panel_apply_failed', 'local_aigrade'),
         ];
 
         $feedbackurl = new moodle_url('/local/aigrade/get_feedback.php', ['id' => $cm->id]);

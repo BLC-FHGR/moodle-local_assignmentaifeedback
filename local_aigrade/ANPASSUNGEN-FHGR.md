@@ -134,6 +134,18 @@ aufgerufen. Damit ist die Session-Sperre sofort frei; die Bewertung läuft weite
 Tabs/Requests desselben Nutzers werden nicht mehr blockiert. (Vollständig gelöst wird die
 Latenz erst mit der geplanten asynchronen Verarbeitung – Idee A.)
 
+## Fix (v2.3.2): „Ins Feedback-Feld übernehmen" funktionierte nicht
+
+Ursache: Moodle 4.x lädt **TinyMCE 6** und stellt den globalen Zugriff als
+`window.tinymce` (klein) bereit; der Code prüfte nur `window.tinyMCE`. Dadurch wurde der
+Editor nicht gefunden, und das Textarea-Fallback greift bei aktivem TinyMCE nicht.
+
+Fix in `amd/src/grade_single.js`: robuster Editor-Zugriff über `window.tinymce ||
+window.tinyMCE`, Auflösung der Editor-Instanz über die Textarea-ID (`tinymce.get(id)`),
+plus Fallbacks für Atto (contenteditable) und reines Textarea inkl. `input`/`change`-Event.
+Wird kein Feld gefunden, erscheint eine Hinweismeldung statt stiller Wirkungslosigkeit.
+Neuer String `js_panel_apply_failed`.
+
 ## Betroffene Dateien
 `classes/grader.php`, `lib.php`, `settings.php`, `db/install.xml`, `db/upgrade.php`,
 `classes/privacy/provider.php`, `version.php`, `lang/de/…` (neu), `lang/en/…`,

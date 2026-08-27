@@ -57,25 +57,58 @@ define(['jquery'], function($) {
                 return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, ' ').trim().length === 0;
             };
 
-            // Read the current content of Moodle's feedback comments editor.
-            var readFeedbackContent = function() {
+            // Locate the feedback comments textarea (server-rendered element the
+            // editor is attached to).
+            var getFeedbackTextarea = function() {
+                return document.querySelector('textarea[name="assignfeedbackcomments_editor[text]"]')
+                    || document.querySelector('textarea[id*="assignfeedbackcomments"]');
+            };
+
+            // Locate the live TinyMCE editor instance for the feedback field, if any.
+            // Moodle 4.x exposes TinyMCE as window.tinymce (lowercase); older builds
+            // used window.tinyMCE. We resolve the instance via the textarea id first,
+            // then fall back to matching by id substring.
+            var getTinyEditor = function() {
+                var tiny = window.tinymce || window.tinyMCE;
+                if (!tiny) {
+                    return null;
+                }
                 try {
-                    if (window.tinyMCE && window.tinyMCE.editors) {
-                        var eds = window.tinyMCE.editors;
-                        for (var i = 0; i < eds.length; i++) {
-                            if (eds[i] && eds[i].id && eds[i].id.indexOf('assignfeedbackcomments') > -1) {
-                                return eds[i].getContent();
-                            }
+                    var ta = getFeedbackTextarea();
+                    if (ta && ta.id && typeof tiny.get === 'function') {
+                        var byId = tiny.get(ta.id);
+                        if (byId) {
+                            return byId;
+                        }
+                    }
+                    var eds = tiny.editors || [];
+                    for (var i = 0; i < eds.length; i++) {
+                        if (eds[i] && eds[i].id && eds[i].id.indexOf('assignfeedbackcomments') > -1) {
+                            return eds[i];
                         }
                     }
                 } catch (e) {
-                    // Fall through to DOM.
+                    return null;
                 }
-                var ta = document.querySelector('textarea[name="assignfeedbackcomments_editor[text]"]');
+                return null;
+            };
+
+            // Read the current content of Moodle's feedback comments editor.
+            var readFeedbackContent = function() {
+                var ed = getTinyEditor();
+                if (ed) {
+                    try {
+                        return ed.getContent();
+                    } catch (e) {
+                        // Fall through to DOM.
+                    }
+                }
+                var ta = getFeedbackTextarea();
                 if (ta && typeof ta.value === 'string') {
                     return ta.value;
                 }
-                return '';
+                var ce = document.querySelector('[id*="assignfeedbackcomments"] [contenteditable="true"]');
+                return ce ? ce.innerHTML : '';
             };
 
             var jumpToFeedbackField = function() {
@@ -99,36 +132,44 @@ define(['jquery'], function($) {
                     }
                 }
                 var handled = false;
-                try {
-                    if (window.tinyMCE && window.tinyMCE.editors) {
-                        var eds = window.tinyMCE.editors;
-                        for (var i = 0; i < eds.length; i++) {
-                            if (eds[i] && eds[i].id && eds[i].id.indexOf('assignfeedbackcomments') > -1) {
-                                eds[i].setContent(currentFeedbackHtml);
-                                if (typeof eds[i].save === 'function') {
-                                    eds[i].save(); // Sync into the underlying textarea.
-                                }
-                                handled = true;
-                                break;
-                            }
+
+                // 1) Live TinyMCE editor (Moodle 4.x default).
+                var ed = getTinyEditor();
+                if (ed) {
+                    try {
+                        ed.setContent(currentFeedbackHtml);
+                        if (typeof ed.save === 'function') {
+                            ed.save(); // Sync into the underlying textarea.
                         }
+                        handled = true;
+                    } catch (e) {
+                        handled = false;
                     }
-                } catch (e) {
-                    handled = false;
                 }
+
+                // 2) No TinyMCE: set the Atto contenteditable area (if any) and the
+                //    underlying textarea, and notify listeners so Moodle registers the change.
                 if (!handled) {
-                    var ta = document.querySelector('textarea[name="assignfeedbackcomments_editor[text]"]');
+                    var ce = document.querySelector('[id*="assignfeedbackcomments"] [contenteditable="true"]');
+                    if (ce) {
+                        ce.innerHTML = currentFeedbackHtml;
+                        ce.dispatchEvent(new Event('input', {bubbles: true}));
+                        handled = true;
+                    }
+                    var ta = getFeedbackTextarea();
                     if (ta) {
                         ta.value = currentFeedbackHtml;
+                        ta.dispatchEvent(new Event('input', {bubbles: true}));
+                        ta.dispatchEvent(new Event('change', {bubbles: true}));
                         handled = true;
-                    } else {
-                        var ce = document.querySelector('[id*="assignfeedbackcomments"] [contenteditable="true"]');
-                        if (ce) {
-                            ce.innerHTML = currentFeedbackHtml;
-                            handled = true;
-                        }
                     }
                 }
+
+                if (!handled) {
+                    alert(strings.applyfailed || 'Feedback field not found.');
+                    return;
+                }
+
                 jumpToFeedbackField();
             };
 
