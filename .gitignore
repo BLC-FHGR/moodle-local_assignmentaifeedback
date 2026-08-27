@@ -1,0 +1,17 @@
+# Build-Artefakte / Distribution (Plugins werden aus dem Quellordner gepackt)
+*.zip
+
+# Lokales Referenzmaterial (Upstream-Quellen, gebaute Pakete) – nicht versioniert
+/.reference/
+
+# Betriebssystem / Editor / OneDrive
+desktop.ini
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
+
+# Node (falls künftig AMD-Build-Tooling genutzt wird)
+node_modules/

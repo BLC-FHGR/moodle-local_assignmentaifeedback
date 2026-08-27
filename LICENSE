@@ -1,0 +1,38 @@
+                    GNU GENERAL PUBLIC LICENSE
+                       Version 3, 29 June 2007
+
+This repository contains two Moodle plugins that are free software:
+you can redistribute them and/or modify them under the terms of the
+GNU General Public License as published by the Free Software Foundation,
+either version 3 of the License, or (at your option) any later version.
+
+These programs are distributed in the hope that they will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with these programs. The full text of the GNU General Public
+License version 3 is available at:
+
+    https://www.gnu.org/licenses/gpl-3.0.txt
+
+--------------------------------------------------------------------------
+Copyright and attribution
+--------------------------------------------------------------------------
+
+local_aigrade ("AI Grade" / KI-Bewertungsassistenz)
+  Copyright (C) 2025-2026 Brian A. Pool, National Trail Local Schools
+  Copyright (C) 2026 FH Graubünden (Anpassungen für den Hochschulkontext)
+
+local_ai_manager
+  Copyright (C) 2024-2026 ISB Bayern (Dr. Peter Mayer, Philipp Memmel u. a.)
+  Copyright (C) 2026 FH Graubünden (Anpassung: frei eingebbares Modellfeld)
+
+Both plugins remain licensed under GNU GPL v3 or later. Modifications by
+FH Graubünden are documented in each plugin's ANPASSUNGEN-FHGR.md and are
+released under the same license.
+
+NOTE: For full GitHub license detection and strict GPL compliance, this
+LICENSE file may be replaced with the complete verbatim GPL-3.0 text
+(e.g. via GitHub "Add license → GNU GPLv3", or by copying gpl-3.0.txt).
