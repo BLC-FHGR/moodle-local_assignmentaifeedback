@@ -53,10 +53,15 @@ if (!$aiconfig || !$aiconfig->enabled) {
 // Handle the grading action
 if ($action === 'grade') {
     require_once($CFG->dirroot . '/local/aigrade/classes/grader.php');
-    
+
+    // Release the PHP session lock now that all access checks are done. The AI
+    // request can take a long time; without this, other requests from the same
+    // user (e.g. other browser tabs) would block until grading finishes.
+    \core\session\manager::write_close();
+
     $grader = new \local_aigrade\grader($assignment, $context, $aiconfig);
     $result = $grader->grade_single_submission($userid, (bool)$force_regrade);
-    
+
     echo json_encode($result);
     die();
 }

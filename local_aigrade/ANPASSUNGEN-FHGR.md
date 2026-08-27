@@ -123,6 +123,17 @@ Umsetzung von Idee B (Benutzerfreundlichkeit + Sicherheit):
   `classes/privacy/provider.php`, `lib.php`, `amd/src|build/grade_single.js`, `styles.css`,
   Sprach-Strings `js_panel_apply`, `js_panel_apply_confirm`.
 
+## Nachträglich ergänzt (v2.3.1): Session-Sperre während der Bewertung freigeben
+
+Problem: Während einer laufenden (synchronen) KI-Bewertung „hing" Moodle in anderen
+Tabs desselben Nutzers, weil PHP die Session für die Dauer des Requests sperrt.
+
+Fix: In den AJAX-Endpunkten `grade.php` und `grade_single.php` wird nach den
+Zugriffsprüfungen und **vor** dem langsamen KI-Aufruf `\core\session\manager::write_close()`
+aufgerufen. Damit ist die Session-Sperre sofort frei; die Bewertung läuft weiter, andere
+Tabs/Requests desselben Nutzers werden nicht mehr blockiert. (Vollständig gelöst wird die
+Latenz erst mit der geplanten asynchronen Verarbeitung – Idee A.)
+
 ## Betroffene Dateien
 `classes/grader.php`, `lib.php`, `settings.php`, `db/install.xml`, `db/upgrade.php`,
 `classes/privacy/provider.php`, `version.php`, `lang/de/…` (neu), `lang/en/…`,
