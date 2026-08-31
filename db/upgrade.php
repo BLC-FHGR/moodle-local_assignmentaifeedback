@@ -195,8 +195,10 @@ function xmldb_local_aigrade_upgrade($oldversion) {
         // New setting: timeout for interactive (manual) AI requests. Seed the
         // default so existing sites get the raised limit without having to open
         // the settings page. See classes/local/request_timeout.php.
+        // Literal instead of request_timeout::DEFAULT_MANUAL_TIMEOUT: upgrade steps
+        // should not depend on classes of the very version being installed.
         if (get_config('local_aigrade', 'manual_timeout') === false) {
-            set_config('manual_timeout', \local_aigrade\local\request_timeout::DEFAULT_MANUAL_TIMEOUT, 'local_aigrade');
+            set_config('manual_timeout', 240, 'local_aigrade');
         }
 
         // Aigrade savepoint reached.

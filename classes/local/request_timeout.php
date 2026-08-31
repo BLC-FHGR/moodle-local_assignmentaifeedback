@@ -43,7 +43,14 @@ defined('MOODLE_INTERNAL') || die();
  */
 class request_timeout {
 
-    /** @var int Default timeout in seconds for AI requests of a background (cron) run. */
+    /**
+     * @var int Default timeout in seconds for AI requests of a background (cron) run.
+     *
+     * Note: settings.php and db/upgrade.php intentionally repeat these numbers as
+     * literals instead of referencing the constants, because they run at points
+     * where a class of a not-yet-installed version may still be missing from the
+     * cached classmap. Keep both places in sync when changing a default.
+     */
     const DEFAULT_BACKGROUND_TIMEOUT = 300;
 
     /**
