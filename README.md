@@ -1,86 +1,83 @@
-# Moodle KI-Bewertungsassistenz – FH Graubünden
+# KI-Bewertungsassistenz (local_aigrade) – Hochschulanpassung
 
-Dieses Repository bündelt zwei Moodle-Plugins, die gemeinsam die **KI-gestützte
-Bewertung schriftlicher Hochschularbeiten** (Exposés, Studien-/Seminararbeiten)
-als **Unterstützung für Dozierende** ermöglichen — mit **lokalen Sprachmodellen**
-und ohne automatische Notenvergabe.
+Moodle-Local-Plugin, das die **Bewertung schriftlicher Hochschularbeiten** (Exposés, Studien- und Seminararbeiten) durch Dozierende unterstützt. Die KI liefert eine **nicht bindende, kriterienbezogene Punkteempfehlung mit Begründung**. Sie vergibt **keine Note** – die finale Bewertung nehmen die Dozierenden vor.
 
-> Das Repository ist ein **Monorepo**: beide Plugins liegen als eigene Unterordner
-> vor. Für die Installation wird jeweils der Plugin-Ordner nach `moodle/local/`
-> kopiert (siehe unten) – ein direktes `git clone` in `moodle/local/` ist wegen der
-> Monorepo-Struktur nicht vorgesehen.
+> Diese Version ist eine Anpassung des Plugins „AI Grade" von Brian A. Pool (National Trail Local Schools) an den Hochschulkontext (Deutsch, kriterienbezogen, ohne US-K-12-Spezifika). Siehe `ANPASSUNGEN-FHGR.md`.
 
-## Enthaltene Plugins
+## Funktionen
 
-| Ordner | Komponente | Zweck |
-|---|---|---|
-| [`local_aigrade/`](local_aigrade/) | `local_aigrade` | Der eigentliche AI Grader: erzeugt kriterienbezogene **Punkteempfehlungen + Feedback** anhand eines hinterlegten Beurteilungsrasters. |
-| [`local_ai_manager/`](local_ai_manager/) | `local_ai_manager` | KI-Anbindung (Tenant, Modelle, Nutzungslogs). Gepatchte Fork-Version, die **frei eingebbare Modellnamen** erlaubt. |
+- **Bewertungsunterstützung** über das Moodle-Core-AI-Subsystem
+- **Abgabetypen**: Online-Text sowie Datei-Uploads (PDF, DOCX, DOC, TXT, PPTX, PPT, ODT)
+- **Beurteilungsraster**: Upload eines Rasters (PDF, DOCX, DOC, TXT), das die Bewertung steuert
+- **Zwei Instruktionsfelder**: getrennte KI-Anweisungen mit bzw. ohne Raster – diese steuern das Verhalten der KI vollständig
+- **Punkteempfehlung statt Note**: Die Empfehlung wird als Feedback-Kommentar gespeichert; es wird **keine** Zahl in den Gradebook geschrieben
+- **Einzel- und Sammelbewertung**: eine Abgabe oder alle noch nicht kommentierten Abgaben
+- **Volle Kontrolle der Dozierenden** über alle KI-Ausgaben
 
-## Herkunft / Upstream
+## Anforderungen
 
-- **local_aigrade** basiert auf „AI Grade" von **Brian A. Pool, National Trail Local
-  Schools** (Upstream-Version `2026031100`, v1.7.2). Diese Fassung ist stark an den
-  **Schweizer Hochschulkontext** angepasst — aktuell **v2.2.1-fhgr** (`2026082003`).
-- **local_ai_manager** ist ein Plugin von **ISB Bayern** (Upstream `2026102300`,
-  Release 4.0). Hier nur **ein minimaler Patch** — **4.0-fhgr** (`2026102301`).
-
-Details der Änderungen:
-- [`local_aigrade/ANPASSUNGEN-FHGR.md`](local_aigrade/ANPASSUNGEN-FHGR.md)
-- [`local_ai_manager/ANPASSUNGEN-FHGR.md`](local_ai_manager/ANPASSUNGEN-FHGR.md)
-
-## Kernpunkte der Hochschul-Anpassung (local_aigrade)
-
-- **Keine automatische Note**: Ergebnis ist eine **Punkteempfehlung + Begründung** als
-  Feedback-Kommentar; die finale Bewertung nehmen die Dozierenden vor.
-- **Steuerung über Prompt + Beurteilungsraster** (kein hartcodierter US-K-12-Kontext mehr).
-- **Deutsch als primäre Sprache**, bereinigte englische Fallback-Strings.
-- **Umschaltbares KI-Backend**: *Local AI Manager* (lokale Modelle) oder *Moodle-Core-AI*.
-- **Feedback-Seitenpanel**: das erzeugte Feedback erscheint zusätzlich rechts neben der
-  Rubrik und spiegelt live das Kommentarfeld der aktuellen Abgabe.
-- **Datenschutz**: kein Debug-Logging von Abgaben, kein externer Google-Docs-Abruf.
+- Moodle 4.5 oder neuer
+- Moodle-AI-Subsystem mit konfiguriertem KI-Anbieter
+- Für PDF-Raster/-Abgaben: `pdftotext` (empfohlen)
+- PHP-ZipArchive-Erweiterung (für DOCX, PPTX, ODT)
 
 ## Installation
 
-Pro Plugin (zuerst `local_ai_manager`, dann `local_aigrade`):
+1. ZIP über **Website-Administration → Plugins → Plugins installieren** hochladen, oder
+2. Ordner `aigrade` nach `/pfad/zu/moodle/local/` kopieren und **Website-Administration → Benachrichtigungen** aufrufen.
 
-1. Den jeweiligen Ordner nach `moodle/local/` kopieren, sodass
-   `moodle/local/ai_manager/version.php` bzw. `moodle/local/aigrade/version.php` existiert.
-   (Alternativ als ZIP über *Website-Administration → Plugins → Plugins installieren*.)
-2. *Website-Administration → Benachrichtigungen* aufrufen und das Upgrade ausführen.
+## Konfiguration
 
-**Wichtig:** Bei bestehenden Installationen **nur aktualisieren, nicht deinstallieren** –
-Deinstallieren löscht die Plugin-Datenbanktabellen (Konfiguration/Logs).
+### Globale Einstellungen
+**Website-Administration → Plugins → Lokale Plugins → KI-Bewertungsassistenz**
+- **Name der KI-Assistenz** (Standard: „KI")
+- **Standard-Anweisungen (mit Raster)** und **(ohne Raster)** – werden in neue Aufgaben übernommen
 
-## Konfiguration (Kurzfassung)
+### KI-Backend wählen
+In den globalen Einstellungen lässt sich das Backend wählen:
+- **Local AI Manager (Standard):** nutzt die Modelle des Plugins `local_ai_manager` – ideal für lokal gehostete Modelle. Zusätzlich den **Purpose** wählen (Standard `feedback`); das Modell wird im `local_ai_manager` pro Purpose/Rolle festgelegt. Voraussetzungen: Tool/Modell einem Purpose zugewiesen, Dozierende mit Capability `local/ai_manager:use` und einmalig bestätigter KI-Nutzung.
+- **Moodle Core AI-Subsystem:** nutzt die unter **Website-Administration → KI → KI-Anbieter** eingerichteten Anbieter.
 
-1. **local_ai_manager**: KI-Werkzeug/Modell einrichten und dem Purpose (Empfehlung:
-   `feedback`) zuweisen; Tenant aktivieren; Dozierende brauchen `local/ai_manager:use`
-   und einmalige KI-Nutzungsbestätigung.
-2. **local_aigrade** (Website-Administration → Plugins → Lokale Plugins → KI-Bewertungsassistenz):
-   - **KI-Backend** = *Local AI Manager*, **Purpose** = derselbe wie oben.
-   - Standard-Anweisungen (Prompt) prüfen; pro Aufgabe Raster hochladen und KI-Bewertung aktivieren.
+Beachten Sie die Datenschutzvorgaben Ihrer Hochschule (siehe unten).
 
-## Datenschutz-Hinweise
+## Verwendung
 
-- Abgabetexte werden an den im ai_manager konfigurierten KI-Anbieter/Modell gesendet.
-  Bei lokal gehosteten Modellen bleiben sie in der eigenen Infrastruktur.
-- Der ai_manager protokolliert Prompt + Antwort in `local_ai_manager_request_log`
-  (Zugriff über Capabilities steuern).
-- Es werden **nur Textinhalte** extrahiert und übertragen – keine Originaldateien,
-  keine Bilder/Formatierung (siehe auch Roadmap zu LN2/Formbewertung).
+### Aktivieren pro Aufgabe
+1. Aufgabe erstellen/bearbeiten → Abschnitt **KI-Bewertung**
+2. **KI-Bewertung** aktivieren
+3. Optional die KI-Anweisungen für diese Aufgabe anpassen
+4. Optional ein Beurteilungsraster hochladen
+5. Speichern
 
-## Grading-Konfiguration (Prompt & Raster)
+### Einzelbewertung
+Abgabe öffnen → Schaltfläche **„Mit KI bewerten"**. Die Empfehlung erscheint im Feedback-Kommentar. Prüfen, anpassen und die Note selbst setzen.
 
-Der aktuell verwendete System-Prompt und das LN1-Beurteilungsraster sind unter
-[`docs/prompt-und-raster/`](docs/prompt-und-raster/) versioniert.
+### Sammelbewertung
+In der Abgabenübersicht **„Alle mit KI bewerten"**. Es werden nur Abgaben verarbeitet, für die noch **kein** Feedback vorliegt (bestehende Kommentare werden nicht überschrieben).
 
-## Weiterentwicklung
+## Funktionsweise
 
-Siehe [`docs/ROADMAP.md`](docs/ROADMAP.md).
+1. Die KI liest den eingereichten Text.
+2. Sie berücksichtigt Raster bzw. Aufgabenbeschreibung und die Dozierenden-Anweisungen.
+3. Sie erstellt eine begründete Punkteempfehlung samt Feedback.
+4. Die Empfehlung wird als Feedback-Kommentar gespeichert – **ohne** Note.
+5. Die Dozierenden prüfen und entscheiden final.
 
-## Lizenz
+## Datenschutz
 
-GNU GPL v3 oder später. Copyright/Attribution siehe [`LICENSE`](LICENSE) sowie die
-`ANPASSUNGEN-FHGR.md` der Plugins. Modifikationen der FH Graubünden stehen unter
-derselben Lizenz.
+- Abgabetexte werden an den in Moodle konfigurierten KI-Anbieter übermittelt. Klären Sie die Vereinbarkeit mit den Datenschutzvorgaben Ihrer Hochschule (in der Schweiz insb. revDSG) und informieren Sie die Studierenden.
+- Das Plugin speichert keine personenbezogenen Daten über die Standard-Bewertung von Moodle hinaus und implementiert die Moodle-Privacy-API.
+- Diese Version enthält **kein** Debug-Logging von Abgaben und **keinen** externen Google-Docs-Abruf (in der Ursprungsversion vorhanden, aus Datenschutzgründen entfernt).
+
+## Grenzen
+
+- Nur **Textinhalte** werden bewertet; Bilder, Formatierung, Layout, Tabellen/Diagramme und Folien-Design können nicht beurteilt werden.
+- Gut geeignet für textlastige Arbeiten; nicht geeignet, wenn visuelle Gestaltung Bewertungskriterium ist.
+
+## Credits & Lizenz
+
+- **Ursprünglicher Autor**: Brian A. Pool, National Trail Local Schools (© 2025/2026)
+- **Hochschulanpassung**: FH Graubünden (© 2026)
+- **Lizenz**: GNU GPL v3 oder später
+
+Dieses Programm ist freie Software gemäss GNU General Public License v3 (oder später). Es wird ohne jede Gewährleistung bereitgestellt. Siehe <https://www.gnu.org/licenses/>.
