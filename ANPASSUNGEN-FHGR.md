@@ -165,6 +165,21 @@ Opt-in pro Aufgabe, asynchron über den Moodle-Cron.
   erneuter Abgabe in v1). Fehler landen im Cron-Log (`mtrace`).
 - DB: Feld via `install.xml` + Upgrade (2026082007); Backup/Restore ergänzt.
 
+## Nachträglich ergänzt (v2.5.0): Repository-Restrukturierung
+
+Das Repository war bisher ein **Monorepo** mit den Ordnern `local_aigrade/` und
+`local_ai_manager/`. Es enthält jetzt nur noch `local_aigrade`:
+
+- **`local_ai_manager` entfernt.** Das Plugin wird separat installiert
+  (<https://github.com/bycs-lp/moodle-local_ai_manager>). Der FHGR-Patch (frei eingebbares
+  Modellfeld) ist als Dokumentation unter `docs/local_ai_manager-patch.md` erhalten.
+- **Plugin-Inhalt im Wurzelverzeichnis**: `version.php` liegt jetzt auf oberster Ebene,
+  das Repository lässt sich direkt nach `moodle/local/aigrade` klonen.
+- **Harte Abhängigkeit deklariert**: `$plugin->dependencies = ['local_ai_manager' => ANY_VERSION]`.
+  Moodle verweigert die Installation, solange `local_ai_manager` fehlt. Der Code-Pfad bleibt
+  weiterhin über `class_exists()` abgesichert, und das umschaltbare Backend
+  (Local AI Manager ⇄ Moodle-Core-AI) bleibt erhalten.
+
 ## Betroffene Dateien
 `classes/grader.php`, `lib.php`, `settings.php`, `db/install.xml`, `db/upgrade.php`,
 `classes/privacy/provider.php`, `version.php`, `lang/de/…` (neu), `lang/en/…`,
@@ -172,9 +187,11 @@ Opt-in pro Aufgabe, asynchron über den Moodle-Cron.
 `backup/moodle2/backup_*`, `backup/moodle2/restore_*`, `README.md`.
 
 ## Installation / Update
+0. `local_ai_manager` muss installiert sein (separates Plugin, siehe `README.md`).
 1. Alte Version ggf. deinstallieren ist **nicht** nötig – der Upgrade-Pfad greift.
-   ZIP über *Website-Administration → Plugins → Plugins installieren* hochladen
-   (oder Ordner `aigrade` nach `local/` kopieren) und *Benachrichtigungen* aufrufen.
+   Repository nach `moodle/local/aigrade` klonen (bzw. das vorhandene Verzeichnis
+   aktualisieren) oder ZIP über *Website-Administration → Plugins → Plugins installieren*
+   hochladen, danach *Benachrichtigungen* aufrufen.
 2. Beim Update wird DB-Version `2026082000` ausgeführt (entfernt die zwei Spalten).
 3. Danach unter *Lokale Plugins → KI-Bewertungsassistenz* die deutschen Default-Prompts
    prüfen/anpassen.

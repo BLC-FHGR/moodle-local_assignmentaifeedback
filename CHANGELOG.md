@@ -1,7 +1,23 @@
 # Changelog
 
-Änderungen an der FHGR-Fassung. Versionsangaben beziehen sich auf `local_aigrade`
-(sofern nicht anders vermerkt).
+Änderungen an der FHGR-Fassung von `local_aigrade`.
+
+## v2.5.0-fhgr — 2026-08-31
+**Restrukturierung:** Das Repository ist kein Monorepo mehr, sondern enthält nur noch
+das Plugin `local_aigrade`.
+- Der mitgelieferte Ordner `local_ai_manager/` wurde **entfernt**. Das Plugin wird
+  separat installiert: <https://github.com/bycs-lp/moodle-local_ai_manager>.
+- Der Plugin-Inhalt liegt jetzt im **Repository-Wurzelverzeichnis** (`version.php` auf
+  oberster Ebene). Damit lässt sich das Repository direkt nach `moodle/local/aigrade`
+  klonen; das bisherige Kopieren aus dem Unterordner entfällt.
+- `version.php` deklariert jetzt eine **harte Abhängigkeit** auf `local_ai_manager`
+  (`$plugin->dependencies`). Das umschaltbare Backend (Local AI Manager ⇄ Moodle-Core-AI)
+  bleibt unverändert erhalten.
+- Der FHGR-Patch am `local_ai_manager` (frei eingebbares Modellfeld) ist als
+  Dokumentation unter `docs/local_ai_manager-patch.md` erhalten und muss bei Bedarf
+  auf die separate Installation angewendet werden.
+- Doku zusammengeführt: `README.md`, `ANPASSUNGEN-FHGR.md`, `CHANGELOG.md` und
+  `CHANGELOG-upstream.md` (vormals `local_aigrade/CHANGES.md`) liegen im Wurzelverzeichnis.
 
 ## v2.4.2-fhgr — 2026-08-31
 **Fix:** Die automatische Bewertung schlug immer nach exakt 60 Sekunden fehl mit
@@ -73,8 +89,3 @@ local_aigrade\task\cron_setup_user()". In Moodle 4.4+ existiert die globale Funk
 - Umschaltbares **KI-Backend** (Local AI Manager ⇄ Moodle-Core-AI) inkl. Purpose-Auswahl.
 - **Feedback-Seitenpanel** rechts neben der Rubrik.
 - Datenschutz-Bereinigung: kein Debug-Logging von Abgaben, kein externer Google-Docs-Abruf.
-
-### local_ai_manager 4.0-fhgr
-- Patch: **frei eingebbares Modellfeld** (Textfeld statt Dropdown), damit eigene
-  Modellnamen wie `gemma4-31b-reasoning` nutzbar sind; `supported_purposes()` verträgt
-  frei eingegebene Modelle.
