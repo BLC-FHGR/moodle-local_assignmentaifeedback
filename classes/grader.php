@@ -62,6 +62,9 @@ class grader {
     /**
      * Grade all submissions that do not have AI feedback yet.
      *
+     * The 'count' key is always present, also on failure: it is a required field
+     * of the local_aigrade_grade_bulk external function's return structure.
+     *
      * @return array Result with success status, count, and any errors
      */
     public function grade_submissions() {
@@ -77,7 +80,7 @@ class grader {
             $pending = $this->get_pending_submissions();
 
             if (empty($pending)) {
-                return ['success' => false, 'error' => get_string('no_ungraded', 'local_aigrade')];
+                return ['success' => false, 'count' => 0, 'error' => get_string('no_ungraded', 'local_aigrade')];
             }
 
             $count = 0;
@@ -102,7 +105,7 @@ class grader {
             return ['success' => true, 'count' => $count];
 
         } catch (\Exception $e) {
-            return ['success' => false, 'error' => $e->getMessage()];
+            return ['success' => false, 'count' => 0, 'error' => $e->getMessage()];
         }
     }
 
