@@ -33,6 +33,13 @@ use assign;
 
 defined('MOODLE_INTERNAL') || die();
 
+// This file is pulled in by the class autoloader, which includes it from inside
+// core_component::classloader() - a method, so the file scope here is NOT the
+// global scope. $CFG therefore has to be imported explicitly; without it the
+// requires below resolve to '/externallib.php' and abort with
+// "Failed opening required".
+global $CFG;
+
 require_once($CFG->libdir . '/externallib.php');
 require_once($CFG->dirroot . '/mod/assign/locallib.php');
 
