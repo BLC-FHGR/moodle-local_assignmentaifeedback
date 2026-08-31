@@ -57,6 +57,8 @@ class grade_single extends external_api {
         return new external_function_parameters([
             'cmid' => new external_value(PARAM_INT, 'Course module ID'),
             'userid' => new external_value(PARAM_INT, 'User ID of the student'),
+            'forceregrade' => new external_value(PARAM_BOOL,
+                'Whether to regenerate feedback that already exists', VALUE_DEFAULT, false),
         ]);
     }
 
@@ -65,15 +67,17 @@ class grade_single extends external_api {
      *
      * @param int $cmid Course module ID
      * @param int $userid User ID
+     * @param bool $forceregrade Whether to regenerate feedback that already exists
      * @return array Result with success status and error message if any
      */
-    public static function execute($cmid, $userid) {
+    public static function execute($cmid, $userid, $forceregrade = false) {
         global $DB;
 
         // Validate parameters.
         $params = self::validate_parameters(self::execute_parameters(), [
             'cmid' => $cmid,
             'userid' => $userid,
+            'forceregrade' => $forceregrade,
         ]);
 
         // Get course module and verify it exists.
@@ -100,9 +104,17 @@ class grade_single extends external_api {
             ];
         }
 
-        // Perform the grading.
-        $grader = new \local_aigrade\grader($assignment, $context, $aiconfig);
-        $result = $grader->grade_single_submission($params['userid']);
+        // Perform the grading. Like the AJAX endpoints, raise the local_ai_manager
+        // request timeout for this request only - the site-wide value (60s) is too
+        // short for long rubric prompts.
+        $restoretimeout = \local_aigrade\local\request_timeout::for_manual();
+
+        try {
+            $grader = new \local_aigrade\grader($assignment, $context, $aiconfig);
+            $result = $grader->grade_single_submission($params['userid'], (bool) $params['forceregrade']);
+        } finally {
+            $restoretimeout();
+        }
 
         return $result;
     }

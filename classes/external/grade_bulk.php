@@ -98,9 +98,18 @@ class grade_bulk extends external_api {
             ];
         }
 
-        // Perform the grading.
-        $grader = new \local_aigrade\grader($assignment, $context, $aiconfig);
-        $result = $grader->grade_submissions();
+        // Perform the grading. Like the AJAX endpoints, raise the local_ai_manager
+        // request timeout for this request only - the site-wide value (60s) is too
+        // short for long rubric prompts. Note that bulk grading processes the
+        // submissions one after another within this single request.
+        $restoretimeout = \local_aigrade\local\request_timeout::for_manual();
+
+        try {
+            $grader = new \local_aigrade\grader($assignment, $context, $aiconfig);
+            $result = $grader->grade_submissions();
+        } finally {
+            $restoretimeout();
+        }
 
         return $result;
     }
