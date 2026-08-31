@@ -91,6 +91,17 @@ if ($hassiteconfig) {
         PARAM_USERNAME
     ));
 
+    // Request timeout for the background (ad-hoc task) AI call. The site-wide
+    // local_ai_manager timeout is tuned for interactive requests and is too
+    // short for long rubric prompts.
+    $settings->add(new admin_setting_configduration(
+        'local_aigrade/autograde_timeout',
+        get_string('setting_autograde_timeout', 'local_aigrade'),
+        get_string('setting_autograde_timeout_desc', 'local_aigrade'),
+        \local_aigrade\task\autograde_task::DEFAULT_REQUEST_TIMEOUT,
+        60
+    ));
+
     // Default instructions WITH rubric.
     $settings->add(new admin_setting_configtextarea(
         'local_aigrade/default_instructions_with_rubric',

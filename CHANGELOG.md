@@ -3,6 +3,20 @@
 Änderungen an der FHGR-Fassung. Versionsangaben beziehen sich auf `local_aigrade`
 (sofern nicht anders vermerkt).
 
+## v2.4.2-fhgr — 2026-08-31
+**Fix:** Die automatische Bewertung schlug immer nach exakt 60 Sekunden fehl mit
+„AI service error: The API took too long to process your request or could not be
+reached in a reasonable time" – es wurde nie ein Feedback-Vorschlag gespeichert.
+- Ursache: `local_ai_manager` verwendet für jede Anfrage das site-weite Zeitlimit
+  `requesttimeout` (Standard 60 s). Das ist für interaktive Anfragen gedacht und für
+  die langen Raster-Prompts im Hintergrund zu kurz.
+- Neue Einstellung **„Zeitlimit für Hintergrund-Anfragen"** (`autograde_timeout`,
+  Standard 5 Minuten, 0 = site-weites Zeitlimit verwenden).
+- Der Ad-hoc-Task hebt das Zeitlimit nur für seinen eigenen Prozess an
+  (`$CFG->forced_plugin_settings`) und stellt es danach wieder her; die site-weite
+  Einstellung und interaktive Anfragen bleiben unverändert. Das PHP-Zeitlimit wird
+  passend mit angehoben.
+
 ## v2.4.1-fhgr — 2026-08-27
 **Fix:** Ad-hoc-Task schlug fehl mit „Call to undefined function
 local_aigrade\task\cron_setup_user()". In Moodle 4.4+ existiert die globale Funktion

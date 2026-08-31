@@ -68,6 +68,8 @@ $string['aigrade_auto_grade'] = 'Automatisch bei Abgabe bewerten';
 $string['aigrade_auto_grade_help'] = 'Wenn aktiviert, erstellt die KI automatisch einen Feedback-Vorschlag, sobald eine studentische Abgabe eingeht. Die Verarbeitung läuft im Hintergrund (Moodle-Cron) und setzt keine Note – der Vorschlag erscheint nur im Panel. Voraussetzungen: ein laufender Cron und ein konfiguriertes Bewertungskonto (siehe Plugin-Einstellungen „Konto für automatische Bewertung").';
 $string['setting_autograde_user'] = 'Konto für automatische Bewertung';
 $string['setting_autograde_user_desc'] = 'Benutzername des Kontos, unter dem die automatische Bewertung im Hintergrund läuft. Dieses Konto muss den lokalen KI-Dienst nutzen dürfen (Capability local/ai_manager:use), die KI-Nutzung bestätigt haben und über ausreichend Kontingent verfügen. Leer lassen, um stattdessen automatisch eine bewertungsberechtigte Lehrperson des jeweiligen Kurses zu verwenden (weniger vorhersehbar).';
+$string['setting_autograde_timeout'] = 'Zeitlimit für Hintergrund-Anfragen';
+$string['setting_autograde_timeout_desc'] = 'Wie lange eine KI-Anfrage der automatischen Bewertung dauern darf. Das site-weite Zeitlimit des Local AI Manager („requesttimeout", Standard 60 Sekunden) ist auf interaktive Anfragen ausgelegt und für lange Raster-Prompts zu kurz – die Hintergrund-Bewertung bricht dann mit „Die API hat zu lange gebraucht" ab. Dieser Wert gilt nur für den Ad-hoc-Task und nur für das Backend „Local AI Manager"; die site-weite Einstellung bleibt unverändert. 0 = site-weites Zeitlimit verwenden.';
 $string['task_autograde'] = 'KI-Bewertung im Hintergrund (AI Grader)';
 
 // Instruktionsfelder pro Aufgabe.

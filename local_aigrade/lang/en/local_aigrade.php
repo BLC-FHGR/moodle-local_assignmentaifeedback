@@ -69,6 +69,8 @@ $string['aigrade_auto_grade'] = 'Automatically grade on submission';
 $string['aigrade_auto_grade_help'] = 'When enabled, the AI automatically creates a feedback suggestion as soon as a student submits. Processing runs in the background (Moodle cron) and does not set a grade - the suggestion only appears in the panel. Requirements: a running cron and a configured grading account (see the plugin setting "Account for automatic grading").';
 $string['setting_autograde_user'] = 'Account for automatic grading';
 $string['setting_autograde_user_desc'] = 'Username of the account under which automatic grading runs in the background. This account must be allowed to use the local AI service (capability local/ai_manager:use), have confirmed AI usage and sufficient quota. Leave empty to instead use a teacher with grading capability in the respective course (less predictable).';
+$string['setting_autograde_timeout'] = 'Timeout for background requests';
+$string['setting_autograde_timeout_desc'] = 'How long an AI request made by automatic grading may take. The site-wide Local AI Manager timeout ("requesttimeout", 60 seconds by default) is meant for interactive requests and is too short for long rubric prompts - background grading then aborts with "The API took too long to process your request". This value applies to the ad-hoc task only and only to the "Local AI Manager" backend; the site-wide setting is left untouched. 0 = use the site-wide timeout.';
 $string['task_autograde'] = 'Background AI grading (AI Grader)';
 
 // Per-assignment instruction fields.
