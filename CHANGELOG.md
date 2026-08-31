@@ -2,6 +2,28 @@
 
 Änderungen an der FHGR-Fassung von `local_aigrade`.
 
+## v2.5.2-fhgr — 2026-08-31
+**Fixes** aus einem Review des Bewertungspfads.
+- **Webservice-Klassen brachen beim Autoloading ab.** `classes/external/grade_single.php`
+  und `grade_bulk.php` lasen auf Dateiebene `$CFG`, ohne es zu importieren.
+  Klassendateien werden von `core_component::classloader()` aus einer Methode heraus
+  eingebunden – der Dateikontext ist dort nicht global, die `require_once`-Pfade fielen
+  auf `/externallib.php` zusammen (`Failed opening required`). Beide registrierten
+  Funktionen waren damit nicht aufrufbar; behoben durch `global $CFG;`.
+- **`local_aigrade_grade_bulk` lieferte eine ungültige Antwortstruktur.** `count` ist als
+  Pflichtfeld deklariert, fehlte aber in beiden Fehlerpfaden von `grade_submissions()`
+  (keine unbewerteten Abgaben, abgefangene Exception). `count` wird jetzt immer
+  zurückgegeben (0 im Fehlerfall).
+- **`settings.php` hing von einer neu hinzugekommenen Klasse ab.** Die Standardwerte kamen
+  aus den Konstanten von `request_timeout`. Da ein Plugin-Versionssprung das gecachte
+  Classmap nicht invalidiert und Admin-Seiten ausser `admin/index.php` kein
+  `CACHE_DISABLE_ALL` setzen, lief jede Admin-Seite im Zeitfenster zwischen Deployment
+  und Upgrade in einen Fatal Error. Die Werte stehen dort jetzt als Literale.
+- **Webservice-Pfade liefen weiter im 60-Sekunden-Zeitlimit.** Die Anhebung aus v2.5.1 lag
+  nur in den AJAX-Endpunkten; beide `execute()`-Methoden nutzen jetzt ebenfalls
+  `request_timeout::for_manual()`. `grade_single` kennt zusätzlich den Parameter
+  `forceregrade`, mit dem eine Neubewertung über den Webservice überhaupt erst möglich ist.
+
 ## v2.5.1-fhgr — 2026-08-31
 **Fix:** Die **manuelle** Bewertung brach nach exakt 60 Sekunden ab mit „AI service error:
 The API took too long to process your request…" – derselbe Fehler, der in v2.4.2 nur für die
