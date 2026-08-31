@@ -191,5 +191,17 @@ function xmldb_local_aigrade_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026082007, 'local', 'aigrade');
     }
 
+    if ($oldversion < 2026083102) {
+        // New setting: timeout for interactive (manual) AI requests. Seed the
+        // default so existing sites get the raised limit without having to open
+        // the settings page. See classes/local/request_timeout.php.
+        if (get_config('local_aigrade', 'manual_timeout') === false) {
+            set_config('manual_timeout', \local_aigrade\local\request_timeout::DEFAULT_MANUAL_TIMEOUT, 'local_aigrade');
+        }
+
+        // Aigrade savepoint reached.
+        upgrade_plugin_savepoint(true, 2026083102, 'local', 'aigrade');
+    }
+
     return true;
 }

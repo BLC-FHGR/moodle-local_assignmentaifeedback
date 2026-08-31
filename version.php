@@ -26,10 +26,10 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_aigrade';
-$plugin->version = 2026083101;  // YYYYMMDDXX format (2026-08-31, version 01)
+$plugin->version = 2026083102;  // YYYYMMDDXX format (2026-08-31, version 02)
 $plugin->requires = 2024042200;  // Moodle 4.5
 $plugin->maturity = MATURITY_BETA;
-$plugin->release = 'v2.5.0-fhgr';
+$plugin->release = 'v2.5.1-fhgr';
 
 // The grading requests are routed through local_ai_manager (https://github.com/bycs-lp/moodle-local_ai_manager),
 // which has to be installed separately. ANY_VERSION: any release providing \local_ai_manager\manager works.

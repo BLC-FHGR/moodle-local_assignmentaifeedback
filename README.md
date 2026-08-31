@@ -48,6 +48,9 @@ Deinstallieren löscht die Plugin-Datenbanktabellen (Konfiguration, gespeicherte
 **Website-Administration → Plugins → Lokale Plugins → KI-Bewertungsassistenz**
 - **Name der KI-Assistenz** (Standard: „KI")
 - **Standard-Anweisungen (mit Raster)** und **(ohne Raster)** – werden in neue Aufgaben übernommen
+- **Zeitlimit für interaktive Anfragen** (Standard 4 Minuten) – wie lange eine über einen
+  Bewertungs-Button ausgelöste KI-Anfrage dauern darf; hebt das site-weite Limit des
+  `local_ai_manager` (Standard 60 s) nur für diese Anfrage an
 - **Konto für automatische Bewertung** und **Zeitlimit für Hintergrund-Anfragen** (für die Auto-Bewertung)
 
 ### KI-Backend wählen

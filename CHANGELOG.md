@@ -2,6 +2,28 @@
 
 Änderungen an der FHGR-Fassung von `local_aigrade`.
 
+## v2.5.1-fhgr — 2026-08-31
+**Fix:** Die **manuelle** Bewertung brach nach exakt 60 Sekunden ab mit „AI service error:
+The API took too long to process your request…" – derselbe Fehler, der in v2.4.2 nur für die
+automatische Bewertung behoben wurde.
+- Ursache: `local_ai_manager` baut seinen HTTP-Client bei **jeder** Anfrage mit dem site-weiten
+  Zeitlimit `requesttimeout` (Standard 60 s). Die Anhebung in v2.4.2 lag als private Methode
+  im Ad-hoc-Task und galt daher nur für den Hintergrund-Lauf; `grade_single.php` und
+  `grade.php` liefen weiter im 60-Sekunden-Limit. Gemessene manuelle Läufe brauchten
+  35–60 s, lagen also unmittelbar an der Grenze.
+- Die Anhebung liegt jetzt in `\local_aigrade\local\request_timeout` und wird von beiden
+  Pfaden genutzt (`for_manual()` bzw. `for_background()`); der Task verhält sich unverändert.
+- Neue Einstellung **„Zeitlimit für interaktive Anfragen"** (`manual_timeout`, Standard
+  **4 Minuten**, 0 = site-weites Zeitlimit verwenden). Der Standard liegt bewusst unter dem
+  Apache-Standard `Timeout 300`, damit im Fehlerfall die lesbare Plugin-Meldung erscheint
+  statt eines Gateway-Fehlers.
+- Das Zeitlimit gilt nur für den jeweiligen Prozess (`$CFG->forced_plugin_settings`) und wird
+  danach wiederhergestellt; die site-weite Einstellung bleibt unverändert.
+- **Bekannte Einschränkung:** Die Sammelbewertung verarbeitet alle Abgaben nacheinander in
+  einer einzigen Anfrage. Das angehobene Limit gilt pro KI-Aufruf, das Webserver-Zeitlimit
+  begrenzt aber den Gesamtlauf – bei vielen Abgaben ist die automatische Bewertung bei Abgabe
+  der robustere Weg. Ein Umbau der Sammelbewertung auf einen Task pro Abgabe steht aus.
+
 ## v2.5.0-fhgr — 2026-08-31
 **Restrukturierung:** Das Repository ist kein Monorepo mehr, sondern enthält nur noch
 das Plugin `local_aigrade`.

@@ -82,6 +82,16 @@ if ($hassiteconfig) {
         $purposeoptions
     ));
 
+    // Request timeout for the interactive AI call behind the grading buttons. The
+    // site-wide local_ai_manager timeout (60s) aborts long rubric prompts.
+    $settings->add(new admin_setting_configduration(
+        'local_aigrade/manual_timeout',
+        get_string('setting_manual_timeout', 'local_aigrade'),
+        get_string('setting_manual_timeout_desc', 'local_aigrade'),
+        \local_aigrade\local\request_timeout::DEFAULT_MANUAL_TIMEOUT,
+        60
+    ));
+
     // Service account for automatic grading on submission (background/cron).
     $settings->add(new admin_setting_configtext(
         'local_aigrade/autograde_user',
@@ -98,7 +108,7 @@ if ($hassiteconfig) {
         'local_aigrade/autograde_timeout',
         get_string('setting_autograde_timeout', 'local_aigrade'),
         get_string('setting_autograde_timeout_desc', 'local_aigrade'),
-        \local_aigrade\task\autograde_task::DEFAULT_REQUEST_TIMEOUT,
+        \local_aigrade\local\request_timeout::DEFAULT_BACKGROUND_TIMEOUT,
         60
     ));
 

@@ -59,8 +59,17 @@ if ($action === 'grade') {
     // user (e.g. other browser tabs) would block until grading finishes.
     \core\session\manager::write_close();
 
-    $grader = new \local_aigrade\grader($assignment, $context, $aiconfig);
-    $result = $grader->grade_single_submission($userid, (bool)$force_regrade);
+    // Interactive AI requests run under the site-wide local_ai_manager timeout
+    // (60 seconds by default), which is too short for long rubric prompts. Raise
+    // it for this request only, the same way the background task does.
+    $restoretimeout = \local_aigrade\local\request_timeout::for_manual();
+
+    try {
+        $grader = new \local_aigrade\grader($assignment, $context, $aiconfig);
+        $result = $grader->grade_single_submission($userid, (bool)$force_regrade);
+    } finally {
+        $restoretimeout();
+    }
 
     echo json_encode($result);
     die();

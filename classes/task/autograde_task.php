@@ -31,9 +31,6 @@ defined('MOODLE_INTERNAL') || die();
  */
 class autograde_task extends \core\task\adhoc_task {
 
-    /** @var int Default timeout in seconds for the AI request of a background run. */
-    const DEFAULT_REQUEST_TIMEOUT = 300;
-
     /**
      * @return string
      */
@@ -84,7 +81,7 @@ class autograde_task extends \core\task\adhoc_task {
         // local_ai_manager timeout is dimensioned for interactive requests and
         // aborts long rubric prompts ("The API took too long to process your
         // request"). Raise it for this task only.
-        $restoretimeout = self::apply_request_timeout();
+        $restoretimeout = \local_aigrade\local\request_timeout::for_background();
 
         try {
             $assignment = new \assign($context, $cm, $course);
@@ -105,66 +102,6 @@ class autograde_task extends \core\task\adhoc_task {
             $restoretimeout();
             self::setup_user(null, null);
         }
-    }
-
-    /**
-     * Raise the local_ai_manager request timeout for this task run.
-     *
-     * The value is only overridden in this process (via forced_plugin_settings),
-     * so interactive requests keep using the site-wide timeout.
-     *
-     * @return callable Restores the previous state; always call it when done.
-     */
-    private static function apply_request_timeout() {
-        global $CFG;
-
-        $noop = function() {
-        };
-
-        $timeout = get_config('local_aigrade', 'autograde_timeout');
-        if ($timeout === false || $timeout === '') {
-            // Setting not written yet (e.g. upgrade not run): use the default.
-            $timeout = self::DEFAULT_REQUEST_TIMEOUT;
-        }
-        $timeout = (int) $timeout;
-        if ($timeout <= 0) {
-            // Explicit 0: keep the site-wide timeout.
-            return $noop;
-        }
-
-        // Only the ai_manager backend reads this setting; core AI brings its own.
-        $backend = get_config('local_aigrade', 'ai_backend');
-        if ($backend !== false && $backend !== '' && $backend !== 'ai_manager') {
-            return $noop;
-        }
-
-        if ((int) get_config('local_ai_manager', 'requesttimeout') >= $timeout) {
-            // Site-wide timeout is already at least as generous.
-            return $noop;
-        }
-
-        // Give the process a little more headroom than the HTTP request itself.
-        // Note: raise() never lowers an existing limit and is a no-op on CLI.
-        \core_php_time_limit::raise($timeout + 60);
-
-        $hadplugin = isset($CFG->forced_plugin_settings['local_ai_manager']);
-        $hadvalue = $hadplugin && array_key_exists('requesttimeout', $CFG->forced_plugin_settings['local_ai_manager']);
-        $previous = $hadvalue ? $CFG->forced_plugin_settings['local_ai_manager']['requesttimeout'] : null;
-
-        $CFG->forced_plugin_settings['local_ai_manager']['requesttimeout'] = $timeout;
-
-        return function() use ($hadplugin, $hadvalue, $previous) {
-            global $CFG;
-
-            if ($hadvalue) {
-                $CFG->forced_plugin_settings['local_ai_manager']['requesttimeout'] = $previous;
-            } else {
-                unset($CFG->forced_plugin_settings['local_ai_manager']['requesttimeout']);
-                if (!$hadplugin) {
-                    unset($CFG->forced_plugin_settings['local_ai_manager']);
-                }
-            }
-        };
     }
 
     /**
