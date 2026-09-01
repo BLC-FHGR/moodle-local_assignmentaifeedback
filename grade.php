@@ -56,22 +56,33 @@ if ($action === 'grade') {
     // user (e.g. other browser tabs) would block until grading finishes.
     \core\session\manager::write_close();
 
-    // Interactive AI requests run under the site-wide local_ai_manager timeout
-    // (60 seconds by default), which is too short for long rubric prompts. Raise
-    // it for this request only, the same way the background task does. Note that
-    // bulk grading processes the submissions one after another within this single
-    // request, so the raised timeout covers each individual AI call while the web
-    // server request timeout still caps the whole run.
-    $restoretimeout = \local_aigrade\local\request_timeout::for_manual();
+    // No AI request is performed here. Grading every submission inside this one
+    // request would take (number of submissions x model latency) and die at the web
+    // server request timeout, losing everything after the point of failure. One
+    // background task per submission is queued instead: each is retried on its own
+    // if the AI service is unavailable, and the panel shows each suggestion as it
+    // arrives.
+    $grader  = new \local_aigrade\grader($assignment, $context, $aiconfig);
+    $pending = $grader->get_pending_submissions();
 
-    try {
-        $grader = new \local_aigrade\grader($assignment, $context, $aiconfig);
-        $result = $grader->grade_submissions();
-    } finally {
-        $restoretimeout();
+    if (empty($pending)) {
+        echo json_encode(['success' => false, 'count' => 0, 'error' => get_string('no_ungraded', 'local_aigrade')]);
+        die();
     }
 
-    echo json_encode($result);
+    $queued = 0;
+    foreach (array_keys($pending) as $pendinguserid) {
+        if (\local_aigrade\task\autograde_task::queue($cm->id, $pendinguserid, true, false, (int) $USER->id)) {
+            $queued++;
+        }
+    }
+
+    if ($queued === 0) {
+        echo json_encode(['success' => false, 'count' => 0, 'error' => get_string('error_queue_failed', 'local_aigrade')]);
+        die();
+    }
+
+    echo json_encode(['success' => true, 'count' => $queued, 'queued' => true]);
     die();
 }
 

@@ -66,7 +66,7 @@ class grade_bulk extends external_api {
      * @return array Result with success status and count or error message
      */
     public static function execute($cmid) {
-        global $DB;
+        global $DB, $USER;
 
         // Validate parameters.
         $params = self::validate_parameters(self::execute_parameters(), [
@@ -98,20 +98,32 @@ class grade_bulk extends external_api {
             ];
         }
 
-        // Perform the grading. Like the AJAX endpoints, raise the local_ai_manager
-        // request timeout for this request only - the site-wide value (60s) is too
-        // short for long rubric prompts. Note that bulk grading processes the
-        // submissions one after another within this single request.
-        $restoretimeout = \local_aigrade\local\request_timeout::for_manual();
+        // Queue one background task per pending submission instead of grading them
+        // all in this request, which would die at the web server request timeout.
+        $grader  = new \local_aigrade\grader($assignment, $context, $aiconfig);
+        $pending = $grader->get_pending_submissions();
 
-        try {
-            $grader = new \local_aigrade\grader($assignment, $context, $aiconfig);
-            $result = $grader->grade_submissions();
-        } finally {
-            $restoretimeout();
+        if (empty($pending)) {
+            return [
+                'success' => false,
+                'count'   => 0,
+                'error'   => get_string('no_ungraded', 'local_aigrade'),
+            ];
         }
 
-        return $result;
+        $queued = 0;
+        foreach (array_keys($pending) as $pendinguserid) {
+            if (\local_aigrade\task\autograde_task::queue($cm->id, $pendinguserid, true, false, (int) $USER->id)) {
+                $queued++;
+            }
+        }
+
+        return [
+            'success' => $queued > 0,
+            'count'   => $queued,
+            'queued'  => $queued > 0,
+            'error'   => $queued > 0 ? '' : get_string('error_queue_failed', 'local_aigrade'),
+        ];
     }
 
     /**
@@ -122,8 +134,10 @@ class grade_bulk extends external_api {
     public static function execute_returns() {
         return new external_single_structure([
             'success' => new external_value(PARAM_BOOL, 'Whether the operation was successful'),
-            'count' => new external_value(PARAM_INT, 'Number of submissions graded'),
+            'count' => new external_value(PARAM_INT, 'Number of submissions queued for grading'),
             'error' => new external_value(PARAM_TEXT, 'Error message if any', VALUE_OPTIONAL),
+            'queued' => new external_value(PARAM_BOOL,
+                'Whether background grading runs were queued', VALUE_OPTIONAL),
         ]);
     }
 }

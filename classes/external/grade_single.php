@@ -71,7 +71,7 @@ class grade_single extends external_api {
      * @return array Result with success status and error message if any
      */
     public static function execute($cmid, $userid, $forceregrade = false) {
-        global $DB;
+        global $DB, $USER;
 
         // Validate parameters.
         $params = self::validate_parameters(self::execute_parameters(), [
@@ -104,19 +104,41 @@ class grade_single extends external_api {
             ];
         }
 
-        // Perform the grading. Like the AJAX endpoints, raise the local_ai_manager
-        // request timeout for this request only - the site-wide value (60s) is too
-        // short for long rubric prompts.
-        $restoretimeout = \local_aigrade\local\request_timeout::for_manual();
+        // Queue the grading rather than performing it here: the AI request regularly
+        // outlives the web server request timeout. The suggestion is fetched
+        // afterwards, e.g. via the plugin's feedback panel.
+        $assignmentid = $assignment->get_instance()->id;
 
-        try {
-            $grader = new \local_aigrade\grader($assignment, $context, $aiconfig);
-            $result = $grader->grade_single_submission($params['userid'], (bool) $params['forceregrade']);
-        } finally {
-            $restoretimeout();
+        if (empty($params['forceregrade'])
+                && \local_aigrade\grader::get_stored_feedback_record($assignmentid, $params['userid'])) {
+            return [
+                'success'        => false,
+                'already_graded' => true,
+                'error'          => get_string('already_has_feedback', 'local_aigrade'),
+            ];
         }
 
-        return $result;
+        if (!$assignment->get_user_submission($params['userid'], false)) {
+            return [
+                'success' => false,
+                'error'   => get_string('error_no_submission', 'local_aigrade'),
+            ];
+        }
+
+        $queued = \local_aigrade\task\autograde_task::queue(
+            $cm->id,
+            $params['userid'],
+            true,
+            (bool) $params['forceregrade'],
+            (int) $USER->id
+        );
+
+        return [
+            'success'  => $queued,
+            'queued'   => $queued,
+            'regraded' => (bool) $params['forceregrade'],
+            'error'    => $queued ? '' : get_string('error_queue_failed', 'local_aigrade'),
+        ];
     }
 
     /**
@@ -131,6 +153,8 @@ class grade_single extends external_api {
             'feedback' => new external_value(PARAM_RAW, 'The generated feedback (HTML)', VALUE_OPTIONAL),
             'regraded' => new external_value(PARAM_BOOL, 'Whether this was a regrade', VALUE_OPTIONAL),
             'already_graded' => new external_value(PARAM_BOOL, 'Whether feedback already existed', VALUE_OPTIONAL),
+            'queued' => new external_value(PARAM_BOOL,
+                'Whether a background grading run was queued', VALUE_OPTIONAL),
         ]);
     }
 }

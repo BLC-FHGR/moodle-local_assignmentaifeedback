@@ -66,6 +66,19 @@ define(['jquery', 'core/notification'], function($, Notification) {
                             dataType: 'json',
                             success: function(response) {
                                 if (response.success) {
+                                    // Queued runs are processed by cron, so there is
+                                    // nothing new on the page yet - do not reload, or the
+                                    // notification is lost immediately.
+                                    if (response.queued) {
+                                        Notification.addNotification({
+                                            message: (strings.queuedcount ||
+                                                '{count} submission(s) queued for AI grading.')
+                                                .replace('{count}', response.count),
+                                            type: 'info'
+                                        });
+                                        btn.prop('disabled', false).text(originalText);
+                                        return;
+                                    }
                                     var successMsg = (strings.successcount ||
                                         'Successfully graded {count} submission(s).')
                                         .replace('{count}', response.count);

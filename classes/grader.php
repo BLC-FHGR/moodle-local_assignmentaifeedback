@@ -342,9 +342,12 @@ class grader {
     /**
      * Get all submitted submissions that do not have AI feedback yet.
      *
+     * Public so the bulk endpoint can queue one background task per submission
+     * instead of grading them all inside a single request.
+     *
      * @return array Array of submissions keyed by userid
      */
-    private function get_pending_submissions() {
+    public function get_pending_submissions() {
         $groupid     = optional_param('group', 0, PARAM_INT);
         $participants = $this->assignment->list_participants($groupid, false);
         $pending     = [];

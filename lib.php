@@ -328,6 +328,7 @@ function local_aigrade_before_footer() {
             'confirmbulk'  => get_string('js_confirm_bulk', 'local_aigrade'),
             'inprogress'   => get_string('js_grading_bulk', 'local_aigrade'),
             'successcount' => get_string('js_success_count', 'local_aigrade'),
+            'queuedcount'  => get_string('js_queued_count', 'local_aigrade'),
             'errorprefix'  => get_string('js_error_prefix', 'local_aigrade'),
             'errorunknown' => get_string('js_error_unknown', 'local_aigrade'),
             'errorserver'  => get_string('js_error_server', 'local_aigrade'),
