@@ -66,10 +66,7 @@ class observer {
                 return;
             }
 
-            $task = new \local_aigrade\task\autograde_task();
-            $task->set_custom_data((object) ['cmid' => $cmid, 'userid' => $userid]);
-            // Second argument dedupes identical queued tasks.
-            \core\task\manager::queue_adhoc_task($task, true);
+            \local_aigrade\task\autograde_task::queue($cmid, $userid);
 
         } catch (\Throwable $e) {
             // Never let AI grading interfere with the submission itself.

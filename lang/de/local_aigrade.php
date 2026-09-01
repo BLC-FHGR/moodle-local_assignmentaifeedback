@@ -76,6 +76,9 @@ $string['setting_autograde_timeout'] = 'Zeitlimit für Hintergrund-Anfragen';
 $string['setting_autograde_timeout_desc'] = 'Wie lange eine KI-Anfrage der automatischen Bewertung dauern darf. Das site-weite Zeitlimit des Local AI Manager („requesttimeout", Standard 60 Sekunden) ist auf interaktive Anfragen ausgelegt und für lange Raster-Prompts zu kurz – die Hintergrund-Bewertung bricht dann mit „Die API hat zu lange gebraucht" ab. Dieser Wert gilt nur für den Ad-hoc-Task und nur für das Backend „Local AI Manager"; die site-weite Einstellung bleibt unverändert. 0 = site-weites Zeitlimit verwenden.';
 $string['task_autograde'] = 'KI-Bewertung im Hintergrund (AI Grader)';
 $string['error_autograde_failed'] = 'Die KI-Bewertung ist fehlgeschlagen und wird erneut versucht: {$a}';
+$string['error_queue_failed'] = 'Die Bewertung konnte nicht in die Warteschlange gestellt werden. Bitte erneut versuchen.';
+$string['js_queued'] = 'In der Warteschlange …';
+$string['js_pending_timeout'] = 'Der KI-Vorschlag wird noch im Hintergrund erstellt. Er erscheint in diesem Panel, sobald er fertig ist – Sie können die Seite verlassen und später zurückkehren.';
 
 // Instruktionsfelder pro Aufgabe.
 $string['aigrade_instructions_with_rubric_field'] = 'KI-Anweisungen (mit Beurteilungsraster)';

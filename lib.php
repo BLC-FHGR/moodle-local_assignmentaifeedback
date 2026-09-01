@@ -307,6 +307,8 @@ function local_aigrade_before_footer() {
             'apply'           => get_string('js_panel_apply', 'local_aigrade'),
             'applyconfirm'    => get_string('js_panel_apply_confirm', 'local_aigrade'),
             'applyfailed'     => get_string('js_panel_apply_failed', 'local_aigrade'),
+            'queued'          => get_string('js_queued', 'local_aigrade'),
+            'pendingtimeout'  => get_string('js_pending_timeout', 'local_aigrade'),
         ];
 
         $feedbackurl = new moodle_url('/local/aigrade/get_feedback.php', ['id' => $cm->id]);

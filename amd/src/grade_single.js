@@ -286,6 +286,62 @@ define(['jquery'], function($) {
                 }
             };
 
+            // How long a queued run may take is governed by the cron interval, so
+            // poll rather than hold the request open. Bounded, so the button never
+            // stays disabled forever.
+            var POLL_INTERVAL_MS = 3000;
+            var POLL_MAX_MS = 15 * 60 * 1000;
+
+            // Wait for the suggestion a queued grading run produces. 'since' is the
+            // timemodified of the feedback that was on screen when the run was
+            // queued, so a regrade is not mistaken for the old suggestion.
+            var pollForFeedback = function(userid, since, btn, originalText) {
+                var started = Date.now();
+
+                var finish = function() {
+                    btn.prop('disabled', false).text(originalText)
+                        .data('force-regrade', false)
+                        .removeClass('btn-warning').addClass('btn-primary');
+                };
+
+                var tick = function() {
+                    // The teacher moved on to another submission: stop polling.
+                    if (userid !== getUserId()) {
+                        finish();
+                        return;
+                    }
+
+                    $.ajax({
+                        url: feedbackUrl + '&userid=' + userid + '&sesskey=' + sesskey,
+                        method: 'GET',
+                        dataType: 'json',
+                        complete: function(xhr) {
+                            var response = xhr.responseJSON;
+
+                            if (response && response.success && response.timemodified > since &&
+                                    !isEmptyContent(response.feedback)) {
+                                currentFeedbackHtml = response.feedback;
+                                loadedUserid = userid;
+                                showPanel(response.feedback);
+                                finish();
+                                return;
+                            }
+
+                            if (Date.now() - started > POLL_MAX_MS) {
+                                finish();
+                                alert(strings.pendingtimeout ||
+                                    'The AI suggestion is still being generated. It will appear here once ready.');
+                                return;
+                            }
+
+                            setTimeout(tick, POLL_INTERVAL_MS);
+                        }
+                    });
+                };
+
+                setTimeout(tick, POLL_INTERVAL_MS);
+            };
+
             var insertButton = function() {
                 if ($('.aigrade-single-button').length > 0) {
                     return true;
@@ -317,6 +373,13 @@ define(['jquery'], function($) {
                             dataType: 'json',
                             success: function(response) {
                                 if (response.success) {
+                                    // The AI request runs in a background task; wait for the
+                                    // suggestion to show up instead of blocking the request.
+                                    if (response.queued) {
+                                        btn.text(strings.queued || 'Queued...');
+                                        pollForFeedback(currentUserid, response.since || 0, btn, originalText);
+                                        return;
+                                    }
                                     // Show the new suggestion directly in the panel; nothing
                                     // is written to the feedback field (advisory only).
                                     if (response.feedback) {

@@ -77,6 +77,9 @@ $string['setting_autograde_timeout'] = 'Timeout for background requests';
 $string['setting_autograde_timeout_desc'] = 'How long an AI request made by automatic grading may take. The site-wide Local AI Manager timeout ("requesttimeout", 60 seconds by default) is meant for interactive requests and is too short for long rubric prompts - background grading then aborts with "The API took too long to process your request". This value applies to the ad-hoc task only and only to the "Local AI Manager" backend; the site-wide setting is left untouched. 0 = use the site-wide timeout.';
 $string['task_autograde'] = 'Background AI grading (AI Grader)';
 $string['error_autograde_failed'] = 'AI grading failed and will be retried: {$a}';
+$string['error_queue_failed'] = 'The grading run could not be queued. Please try again.';
+$string['js_queued'] = 'Queued...';
+$string['js_pending_timeout'] = 'The AI suggestion is still being generated in the background. It will appear in this panel as soon as it is ready - you can leave this page and come back later.';
 
 // Per-assignment instruction fields.
 $string['aigrade_instructions_with_rubric_field'] = 'AI instructions (with rubric)';

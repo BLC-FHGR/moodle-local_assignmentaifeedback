@@ -40,7 +40,11 @@ require_capability('local/aigrade:grade', $context);
 
 $assignment = new assign($context, $cm, $course);
 
-$feedback = \local_aigrade\grader::get_stored_feedback($assignment->get_instance()->id, $userid);
+$record = \local_aigrade\grader::get_stored_feedback_record($assignment->get_instance()->id, $userid);
 
-echo json_encode(['success' => true, 'feedback' => $feedback]);
+echo json_encode([
+    'success'      => true,
+    'feedback'     => $record ? (string) $record->feedback : '',
+    'timemodified' => $record ? (int) $record->timemodified : 0,
+]);
 die();

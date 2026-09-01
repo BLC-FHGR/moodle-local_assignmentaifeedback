@@ -52,26 +52,55 @@ if (!$aiconfig || !$aiconfig->enabled) {
 
 // Handle the grading action
 if ($action === 'grade') {
-    require_once($CFG->dirroot . '/local/aigrade/classes/grader.php');
 
-    // Release the PHP session lock now that all access checks are done. The AI
-    // request can take a long time; without this, other requests from the same
-    // user (e.g. other browser tabs) would block until grading finishes.
+    // Release the PHP session lock now that all access checks are done.
     \core\session\manager::write_close();
 
-    // Interactive AI requests run under the site-wide local_ai_manager timeout
-    // (60 seconds by default), which is too short for long rubric prompts. Raise
-    // it for this request only, the same way the background task does.
-    $restoretimeout = \local_aigrade\local\request_timeout::for_manual();
+    $assignmentid = $assignment->get_instance()->id;
 
-    try {
-        $grader = new \local_aigrade\grader($assignment, $context, $aiconfig);
-        $result = $grader->grade_single_submission($userid, (bool)$force_regrade);
-    } finally {
-        $restoretimeout();
+    // The AI request itself is NOT performed here. It regularly takes longer than
+    // the web server request timeout allows, and holding a web server process for
+    // minutes per click does not scale. Instead the same ad-hoc task the automatic
+    // grading uses is queued, and the feedback panel polls for the result.
+    $existing = \local_aigrade\grader::get_stored_feedback_record($assignmentid, $userid);
+
+    if (!$force_regrade && $existing) {
+        echo json_encode([
+            'success'        => false,
+            'already_graded' => true,
+            'error'          => get_string('already_has_feedback', 'local_aigrade'),
+        ]);
+        die();
     }
 
-    echo json_encode($result);
+    // Fail fast on a submission there is nothing to grade in, rather than queueing
+    // a task that can only fail out of the teacher's sight.
+    if (!$assignment->get_user_submission($userid, false)) {
+        echo json_encode(['success' => false, 'error' => get_string('error_no_submission', 'local_aigrade')]);
+        die();
+    }
+
+    $queued = \local_aigrade\task\autograde_task::queue(
+        $cm->id,
+        $userid,
+        true,
+        (bool) $force_regrade,
+        (int) $USER->id
+    );
+
+    if (!$queued) {
+        echo json_encode(['success' => false, 'error' => get_string('error_queue_failed', 'local_aigrade')]);
+        die();
+    }
+
+    echo json_encode([
+        'success'  => true,
+        'queued'   => true,
+        'regraded' => (bool) $force_regrade,
+        // The panel polls until a suggestion newer than this appears, so a regrade
+        // is not mistaken for the feedback that is already on screen.
+        'since'    => $existing ? (int) $existing->timemodified : 0,
+    ]);
     die();
 }
 

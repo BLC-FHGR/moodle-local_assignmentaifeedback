@@ -39,6 +39,40 @@ class autograde_task extends \core\task\adhoc_task {
     }
 
     /**
+     * Queue a grading run for one submission.
+     *
+     * Used by the event observer (automatic grading) and by the grading buttons,
+     * which do not perform the AI request in the web request itself: it can take
+     * minutes, which would hold a web server process and run into the web server
+     * request timeout.
+     *
+     * @param int $cmid Course module ID of the assignment
+     * @param int $userid The student whose submission is graded
+     * @param bool $manual True for a teacher-triggered run: it ignores the
+     *  per-assignment "grade automatically on submission" flag and runs under the
+     *  triggering teacher's account
+     * @param bool $forceregrade Whether to replace feedback that already exists
+     * @param int $graderid Account the AI request runs under; 0 resolves the
+     *  configured service account
+     * @return bool Whether the task was queued
+     */
+    public static function queue(int $cmid, int $userid, bool $manual = false,
+            bool $forceregrade = false, int $graderid = 0): bool {
+        $task = new self();
+        $task->set_custom_data((object) [
+            'cmid'         => $cmid,
+            'userid'       => $userid,
+            'manual'       => $manual ? 1 : 0,
+            'forceregrade' => $forceregrade ? 1 : 0,
+            'graderid'     => $graderid,
+        ]);
+
+        // Second argument dedupes identical queued tasks. A regrade carries
+        // different custom data, so it is never swallowed by a pending plain run.
+        return \core\task\manager::queue_adhoc_task($task, true);
+    }
+
+    /**
      * Run the background grading.
      */
     public function execute() {
@@ -61,14 +95,23 @@ class autograde_task extends \core\task\adhoc_task {
         }
         $context = \context_module::instance($cm->id);
 
+        $manual = !empty($data->manual);
+
         $config = $DB->get_record('local_aigrade_config', ['assignmentid' => $cm->instance]);
-        if (!$config || empty($config->enabled) || empty($config->auto_grade)) {
+        if (!$config || empty($config->enabled)) {
+            return;
+        }
+        // The auto_grade flag only governs grading on submission. A run a teacher
+        // triggered explicitly must go ahead regardless.
+        if (!$manual && empty($config->auto_grade)) {
             return;
         }
 
         // Resolve the user under which the AI request runs. This user needs the
-        // ai_manager capability, confirmed AI usage and quota.
-        $graderuser = self::resolve_grader_user($context);
+        // ai_manager capability, confirmed AI usage and quota. A manual run carries
+        // the teacher who triggered it, so capability and quota stay attributed to
+        // the person who asked for the grading.
+        $graderuser = self::resolve_grader_user($context, (int) ($data->graderid ?? 0));
         if (!$graderuser) {
             mtrace('local_aigrade autograde: no valid grading account configured/found - skipped.');
             return;
@@ -86,7 +129,7 @@ class autograde_task extends \core\task\adhoc_task {
         try {
             $assignment = new \assign($context, $cm, $course);
             $grader = new \local_aigrade\grader($assignment, $context, $config);
-            $result = $grader->grade_single_submission($data->userid, false);
+            $result = $grader->grade_single_submission($data->userid, !empty($data->forceregrade));
 
             if (empty($result['success'])) {
                 $err = !empty($result['error']) ? $result['error'] : 'unknown error';
@@ -134,9 +177,21 @@ class autograde_task extends \core\task\adhoc_task {
      * Resolve the account under which the AI request runs.
      *
      * @param \context_module $context
+     * @param int $graderid Account requested by the caller, 0 for the service account
      * @return \stdClass|null
      */
-    private static function resolve_grader_user(\context_module $context) {
+    private static function resolve_grader_user(\context_module $context, int $graderid = 0) {
+        // 0) Account handed over by the caller (the teacher who pressed the button).
+        if ($graderid > 0) {
+            $user = \core_user::get_user($graderid, '*', IGNORE_MISSING);
+            if ($user && $user->confirmed && empty($user->deleted) && empty($user->suspended)
+                    && has_capability('local/aigrade:grade', $context, $user)) {
+                return $user;
+            }
+            // Named but no longer usable: do not silently grade as someone else.
+            return null;
+        }
+
         // 1) Configured service account (username).
         $username = trim((string) get_config('local_aigrade', 'autograde_user'));
         if ($username !== '') {

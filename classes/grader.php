@@ -738,13 +738,27 @@ class grader {
      * @return string The stored feedback HTML, or empty string if none
      */
     public static function get_stored_feedback($assignmentid, $userid) {
+        $record = self::get_stored_feedback_record($assignmentid, $userid);
+
+        return $record ? (string) $record->feedback : '';
+    }
+
+    /**
+     * Fetch the stored AI feedback row for a submission.
+     *
+     * The panel needs 'timemodified' to tell a newly generated suggestion from the
+     * one it is already showing, so it can poll while a queued run is pending.
+     *
+     * @param int $assignmentid
+     * @param int $userid
+     * @return \stdClass|false The record, or false if none
+     */
+    public static function get_stored_feedback_record($assignmentid, $userid) {
         global $DB;
 
-        $record = $DB->get_record('local_aigrade_feedback', [
+        return $DB->get_record('local_aigrade_feedback', [
             'assignmentid' => $assignmentid,
             'userid'       => $userid,
         ]);
-
-        return $record ? (string) $record->feedback : '';
     }
 }
