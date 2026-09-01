@@ -63,9 +63,6 @@ $string['setting_ai_manager_purpose'] = 'Local AI Manager: Verwendungszweck (Pur
 $string['setting_ai_manager_purpose_desc'] = 'Nur relevant, wenn als Backend „Local AI Manager" gewählt ist. Der AI Grader sendet den Prompt über diesen Verwendungszweck. Das dabei verwendete Modell wird im Local AI Manager pro Verwendungszweck und Rolle festgelegt – wählen Sie den Zweck, dem Sie Ihr gewünschtes (lokales) Modell zugewiesen haben. Empfehlung: „feedback".';
 $string['error_ai_manager_missing'] = 'Das Plugin „local_ai_manager" ist nicht installiert oder nicht verfügbar. Installieren Sie es oder wählen Sie als Backend das Moodle Core AI-Subsystem.';
 
-// Zeitlimit für interaktive (manuelle) KI-Anfragen.
-$string['setting_manual_timeout'] = 'Zeitlimit für interaktive Anfragen';
-$string['setting_manual_timeout_desc'] = 'Wie lange eine KI-Anfrage dauern darf, die über einen Bewertungs-Button ausgelöst wird. Das site-weite Zeitlimit des Local AI Manager („requesttimeout", Standard 60 Sekunden) ist auf kurze Anfragen ausgelegt und für lange Raster-Prompts zu kurz – die manuelle Bewertung bricht dann mit „Die API hat zu lange gebraucht" ab, ohne dass etwas gespeichert wird. Dieser Wert gilt nur für die Bewertungs-Buttons und nur für das Backend „Local AI Manager"; die site-weite Einstellung bleibt unverändert. Halten Sie ihn unter dem Anfrage-Zeitlimit des Webservers (Apache „Timeout", Standard 300 Sekunden), sonst erhält der Browser einen Gateway-Fehler statt einer lesbaren Meldung. Hinweis: Die Sammelbewertung verarbeitet die Abgaben nacheinander innerhalb einer einzigen Anfrage – bei vielen Abgaben kann das Webserver-Zeitlimit trotzdem überschritten werden; die automatische Bewertung bei Abgabe ist dafür der robustere Weg. 0 = site-weites Zeitlimit verwenden.';
 
 // Automatische Bewertung bei Abgabe.
 $string['aigrade_auto_grade'] = 'Automatisch bei Abgabe bewerten';

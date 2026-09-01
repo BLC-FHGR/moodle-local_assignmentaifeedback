@@ -37,6 +37,9 @@ defined('MOODLE_INTERNAL') || die();
  * "The API took too long to process your request or could not be reached in a
  * reasonable time" (cURL error 28), without any feedback being stored.
  *
+ * Every AI request of this plugin runs inside the ad-hoc grading task, so this is
+ * only ever applied to a background run - there is no interactive variant.
+ *
  * Since get_config() gives $CFG->forced_plugin_settings precedence over the
  * stored value, the timeout can be widened for one process without touching the
  * site-wide setting or affecting any other plugin using local_ai_manager.
@@ -46,21 +49,12 @@ class request_timeout {
     /**
      * @var int Default timeout in seconds for AI requests of a background (cron) run.
      *
-     * Note: settings.php and db/upgrade.php intentionally repeat these numbers as
-     * literals instead of referencing the constants, because they run at points
-     * where a class of a not-yet-installed version may still be missing from the
-     * cached classmap. Keep both places in sync when changing a default.
+     * Note: settings.php intentionally repeats this number as a literal instead of
+     * referencing the constant, because it runs at points where a class of a
+     * not-yet-installed version may still be missing from the cached classmap.
+     * Keep both places in sync when changing the default.
      */
     const DEFAULT_BACKGROUND_TIMEOUT = 300;
-
-    /**
-     * @var int Default timeout in seconds for interactive AI requests (grading buttons).
-     *
-     * Deliberately below the default Apache 'Timeout' of 300 seconds: once the web
-     * server gives up, the browser receives a gateway error instead of the readable
-     * message this plugin would render.
-     */
-    const DEFAULT_MANUAL_TIMEOUT = 240;
 
     /**
      * Raise the timeout for a background (ad-hoc task) run.
@@ -69,15 +63,6 @@ class request_timeout {
      */
     public static function for_background(): callable {
         return self::apply(self::resolve('autograde_timeout', self::DEFAULT_BACKGROUND_TIMEOUT));
-    }
-
-    /**
-     * Raise the timeout for an interactive run (the grading buttons).
-     *
-     * @return callable Restores the previous state; always call it when done.
-     */
-    public static function for_manual(): callable {
-        return self::apply(self::resolve('manual_timeout', self::DEFAULT_MANUAL_TIMEOUT));
     }
 
     /**

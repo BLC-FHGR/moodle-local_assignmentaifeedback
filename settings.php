@@ -82,24 +82,6 @@ if ($hassiteconfig) {
         $purposeoptions
     ));
 
-    // Request timeout for the interactive AI call behind the grading buttons. The
-    // site-wide local_ai_manager timeout (60s) aborts long rubric prompts.
-    //
-    // The defaults below are deliberately written as literals and not read from
-    // \local_aigrade\local\request_timeout: this file is included whenever the
-    // admin settings tree is built, and admin pages other than admin/index.php do
-    // not define CACHE_DISABLE_ALL. A class added by a not-yet-run upgrade is
-    // therefore still missing from the cached classmap, and referencing it here
-    // would break those pages. Keep the values in sync with the constants
-    // DEFAULT_MANUAL_TIMEOUT (240) and DEFAULT_BACKGROUND_TIMEOUT (300).
-    $settings->add(new admin_setting_configduration(
-        'local_aigrade/manual_timeout',
-        get_string('setting_manual_timeout', 'local_aigrade'),
-        get_string('setting_manual_timeout_desc', 'local_aigrade'),
-        240,
-        60
-    ));
-
     // Service account for automatic grading on submission (background/cron).
     $settings->add(new admin_setting_configtext(
         'local_aigrade/autograde_user',
@@ -109,9 +91,17 @@ if ($hassiteconfig) {
         PARAM_USERNAME
     ));
 
-    // Request timeout for the background (ad-hoc task) AI call. The site-wide
-    // local_ai_manager timeout is tuned for interactive requests and is too
-    // short for long rubric prompts.
+    // Request timeout for the AI call in the grading task. Every AI request of this
+    // plugin runs there, so this is the only timeout the plugin itself controls.
+    // The site-wide local_ai_manager timeout is tuned for short interactive
+    // requests and is too short for long rubric prompts.
+    //
+    // The default below is deliberately a literal and not read from
+    // \local_aigrade\local\request_timeout: this file is included whenever the
+    // admin settings tree is built, and admin pages other than admin/index.php do
+    // not define CACHE_DISABLE_ALL, so a class added by a not-yet-run upgrade is
+    // still missing from the cached classmap. Keep it in sync with
+    // DEFAULT_BACKGROUND_TIMEOUT (300).
     $settings->add(new admin_setting_configduration(
         'local_aigrade/autograde_timeout',
         get_string('setting_autograde_timeout', 'local_aigrade'),

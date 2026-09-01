@@ -195,14 +195,26 @@ function xmldb_local_aigrade_upgrade($oldversion) {
         // New setting: timeout for interactive (manual) AI requests. Seed the
         // default so existing sites get the raised limit without having to open
         // the settings page. See classes/local/request_timeout.php.
-        // Literal instead of request_timeout::DEFAULT_MANUAL_TIMEOUT: upgrade steps
-        // should not depend on classes of the very version being installed.
+        // Historical step, kept for sites upgrading through this version. The
+        // setting it seeds is removed again in 2026090100, once all AI requests
+        // moved into the grading task.
         if (get_config('local_aigrade', 'manual_timeout') === false) {
             set_config('manual_timeout', 240, 'local_aigrade');
         }
 
         // Aigrade savepoint reached.
         upgrade_plugin_savepoint(true, 2026083102, 'local', 'aigrade');
+    }
+
+    if ($oldversion < 2026090100) {
+        // The grading buttons no longer perform the AI request in the web request,
+        // so the interactive timeout setting introduced in 2026083102 has nothing
+        // left to govern. All AI requests run in the ad-hoc task and use
+        // 'autograde_timeout'.
+        unset_config('manual_timeout', 'local_aigrade');
+
+        // Aigrade savepoint reached.
+        upgrade_plugin_savepoint(true, 2026090100, 'local', 'aigrade');
     }
 
     return true;

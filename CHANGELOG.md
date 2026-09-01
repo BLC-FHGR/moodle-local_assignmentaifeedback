@@ -2,6 +2,29 @@
 
 Änderungen an der FHGR-Fassung von `local_aigrade`.
 
+## v2.6.0-fhgr — 2026-09-01
+**Umbau:** Alle KI-Anfragen laufen jetzt im Hintergrund (Ad-hoc-Task) – auch die über die
+Bewertungs-Buttons ausgelösten. Damit ist das Zeitlimit des Webservers für die Bewertung
+kein Thema mehr, und fehlgeschlagene Läufe werden automatisch wiederholt.
+- **Fehlgeschlagene Läufe wurden stillschweigend verworfen.** Der Task hat den Fehler nur
+  per `mtrace` protokolliert und ist normal beendet worden – Moodle wertete ihn als
+  erfolgreich (`result=0`) und entfernte ihn aus der Warteschlange. Eine vorübergehend
+  nicht erreichbare KI bedeutete: die Abgabe wird nie bewertet, ohne Wiederholung und ohne
+  Hinweis. Der Grader kennzeichnet Dienstfehler nun mit `retryable`, der Task wirft in dem
+  Fall und wird von Moodle mit der üblichen Backoff-Staffelung wiederholt.
+- **Einzelbewertung** reiht den Lauf ein und antwortet sofort; das Panel pollt (alle 3 s,
+  maximal 15 Minuten) auf den neuen Vorschlag. Ein manueller Lauf läuft unter dem Konto der
+  Lehrperson, die geklickt hat, und ignoriert das Aufgaben-Flag „Automatisch bei Abgabe
+  bewerten".
+- **Sammelbewertung** reiht einen Task pro offener Abgabe ein statt alle Abgaben in einem
+  Request zu bewerten. Ein einzelner KI-Fehler reisst damit nicht mehr den ganzen Lauf mit.
+- Die **Webservice-Funktionen** reihen ebenfalls nur noch ein, damit beide Eingänge
+  dasselbe Ausführungsmodell haben.
+- Die in v2.5.1 eingeführte Einstellung **„Zeitlimit für interaktive Anfragen"**
+  (`manual_timeout`) ist damit gegenstandslos und wurde entfernt; ein Upgrade-Schritt löscht
+  den gespeicherten Wert. Maßgeblich ist nur noch **„Zeitlimit für Hintergrund-Anfragen"**.
+- **Voraussetzung:** Ein laufender Cron ist jetzt für *jede* KI-Bewertung nötig.
+
 ## v2.5.2-fhgr — 2026-08-31
 **Fixes** aus einem Review des Bewertungspfads.
 - **Webservice-Klassen brachen beim Autoloading ab.** `classes/external/grade_single.php`

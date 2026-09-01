@@ -64,9 +64,6 @@ $string['setting_ai_manager_purpose'] = 'Local AI Manager: purpose';
 $string['setting_ai_manager_purpose_desc'] = 'Only relevant when the backend is set to "Local AI Manager". The AI grader sends the prompt through this purpose. The model used is configured per purpose and role inside Local AI Manager - choose the purpose you assigned your desired (local) model to. Recommended: "feedback".';
 $string['error_ai_manager_missing'] = 'The "local_ai_manager" plugin is not installed or unavailable. Install it, or select the Moodle core AI subsystem as the backend.';
 
-// Timeout for interactive (manual) AI requests.
-$string['setting_manual_timeout'] = 'Timeout for interactive requests';
-$string['setting_manual_timeout_desc'] = 'How long an AI request triggered by a grading button may take. The site-wide Local AI Manager timeout ("requesttimeout", 60 seconds by default) is meant for short requests and is too short for long rubric prompts - manual grading then aborts with "The API took too long to process your request" and nothing is stored. This value applies to the grading buttons only and only to the "Local AI Manager" backend; the site-wide setting is left untouched. Keep it below your web server request timeout (Apache "Timeout", 300 seconds by default), otherwise the browser receives a gateway error instead of a readable message. Note that bulk grading processes submissions one after another within a single request, so a large batch can still exceed the web server timeout - automatic grading on submission is the more robust route for many submissions. 0 = use the site-wide timeout.';
 
 // Automatic grading on submission.
 $string['aigrade_auto_grade'] = 'Automatically grade on submission';
