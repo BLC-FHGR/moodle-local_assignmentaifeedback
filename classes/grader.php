@@ -105,12 +105,21 @@ class grader {
             return ['success' => true, 'count' => $count];
 
         } catch (\Exception $e) {
-            return ['success' => false, 'count' => 0, 'error' => $e->getMessage()];
+            // 'retryable': the failure came from the AI service (timeout, gateway
+            // error, quota) rather than from the submission itself, so a later
+            // attempt may well succeed. Callers running in a task use this to fail
+            // the task so Moodle retries it. Extra keys are ignored by
+            // external_api::clean_returnvalue(), so this is safe for web services.
+            return ['success' => false, 'count' => 0, 'error' => $e->getMessage(), 'retryable' => true];
         }
     }
 
     /**
      * Grade a single submission using AI.
+     *
+     * A failure caused by the AI service (rather than by the submission) carries
+     * 'retryable' => true, so a caller running inside a task can fail the task and
+     * let Moodle retry it later.
      *
      * @param int $userid The user ID to grade
      * @param bool $force_regrade Whether to regenerate feedback that already exists
@@ -153,7 +162,8 @@ class grader {
             return ['success' => false, 'error' => get_string('error_no_feedback', 'local_aigrade')];
 
         } catch (\Exception $e) {
-            return ['success' => false, 'error' => $e->getMessage()];
+            // See the note on 'retryable' in grade_submissions().
+            return ['success' => false, 'error' => $e->getMessage(), 'retryable' => true];
         }
     }
 

@@ -89,10 +89,21 @@ class autograde_task extends \core\task\adhoc_task {
             $result = $grader->grade_single_submission($data->userid, false);
 
             if (empty($result['success'])) {
+                $err = !empty($result['error']) ? $result['error'] : 'unknown error';
+
                 if (!empty($result['already_graded'])) {
                     mtrace('local_aigrade autograde: userid=' . $data->userid . ' already has feedback - skipped.');
+                } else if (!empty($result['retryable'])) {
+                    // The AI service failed (timeout, gateway error, quota). Throwing
+                    // makes Moodle mark the task as failed and retry it with its usual
+                    // backoff, instead of silently dropping the submission: previously
+                    // the task completed successfully here and the queued entry was
+                    // deleted, so the suggestion was lost for good.
+                    mtrace('local_aigrade autograde: userid=' . $data->userid
+                        . ' failed, will be retried - ' . $err);
+                    throw new \moodle_exception('error_autograde_failed', 'local_aigrade', '', $err);
                 } else {
-                    $err = !empty($result['error']) ? $result['error'] : 'unknown error';
+                    // Nothing to retry (e.g. the submission carries no readable text).
                     mtrace('local_aigrade autograde: userid=' . $data->userid . ' failed - ' . $err);
                 }
             } else {
