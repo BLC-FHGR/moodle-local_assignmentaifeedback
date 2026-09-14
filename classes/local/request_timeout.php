@@ -17,12 +17,12 @@
 /**
  * Per-request override of the local_ai_manager request timeout.
  *
- * @package    local_aigrade
+ * @package    local_assignmentaifeedback
  * @copyright  2026 Anpassung Hochschulkontext FH Graubünden
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_aigrade\local;
+namespace local_assignmentaifeedback\local;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -69,12 +69,12 @@ class request_timeout {
      * Read a timeout setting, falling back to the default if it was never written
      * (e.g. the plugin upgrade has not been run yet).
      *
-     * @param string $name Setting name within local_aigrade
+     * @param string $name Setting name within local_assignmentaifeedback
      * @param int $default
      * @return int
      */
     private static function resolve(string $name, int $default): int {
-        $timeout = get_config('local_aigrade', $name);
+        $timeout = get_config('local_assignmentaifeedback', $name);
         if ($timeout === false || $timeout === '') {
             return $default;
         }
@@ -99,7 +99,7 @@ class request_timeout {
         }
 
         // Only the ai_manager backend reads this setting; core AI brings its own.
-        $backend = get_config('local_aigrade', 'ai_backend');
+        $backend = get_config('local_assignmentaifeedback', 'ai_backend');
         if ($backend !== false && $backend !== '' && $backend !== 'ai_manager') {
             return $noop;
         }

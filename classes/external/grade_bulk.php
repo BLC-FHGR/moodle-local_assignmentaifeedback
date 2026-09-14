@@ -17,12 +17,12 @@
 /**
  * External service for bulk grading submissions
  *
- * @package    local_aigrade
+ * @package    local_assignmentaifeedback
  * @copyright  2025 Brian A. Pool, National Trail Local Schools
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_aigrade\external;
+namespace local_assignmentaifeedback\external;
 
 use external_api;
 use external_function_parameters;
@@ -82,38 +82,38 @@ class grade_bulk extends external_api {
         self::validate_context($context);
 
         // Check capability.
-        require_capability('local/aigrade:grade', $context);
+        require_capability('local/assignmentaifeedback:grade', $context);
 
         // Create assignment object.
         $assignment = new assign($context, $cm, $course);
 
         // Check if AI grading is enabled for this assignment.
-        $aiconfig = $DB->get_record('local_aigrade_config', ['assignmentid' => $assignment->get_instance()->id]);
+        $aiconfig = $DB->get_record('local_assignmentaifeedback_config', ['assignmentid' => $assignment->get_instance()->id]);
 
         if (!$aiconfig || !$aiconfig->enabled) {
             return [
                 'success' => false,
                 'count' => 0,
-                'error' => get_string('aigrade_disabled', 'local_aigrade'),
+                'error' => get_string('assignmentaifeedback_disabled', 'local_assignmentaifeedback'),
             ];
         }
 
         // Queue one background task per pending submission instead of grading them
         // all in this request, which would die at the web server request timeout.
-        $grader  = new \local_aigrade\grader($assignment, $context, $aiconfig);
+        $grader  = new \local_assignmentaifeedback\grader($assignment, $context, $aiconfig);
         $pending = $grader->get_pending_submissions();
 
         if (empty($pending)) {
             return [
                 'success' => false,
                 'count'   => 0,
-                'error'   => get_string('no_ungraded', 'local_aigrade'),
+                'error'   => get_string('no_ungraded', 'local_assignmentaifeedback'),
             ];
         }
 
         $queued = 0;
         foreach (array_keys($pending) as $pendinguserid) {
-            if (\local_aigrade\task\autograde_task::queue($cm->id, $pendinguserid, true, false, (int) $USER->id)) {
+            if (\local_assignmentaifeedback\task\autograde_task::queue($cm->id, $pendinguserid, true, false, (int) $USER->id)) {
                 $queued++;
             }
         }
@@ -122,7 +122,7 @@ class grade_bulk extends external_api {
             'success' => $queued > 0,
             'count'   => $queued,
             'queued'  => $queued > 0,
-            'error'   => $queued > 0 ? '' : get_string('error_queue_failed', 'local_aigrade'),
+            'error'   => $queued > 0 ? '' : get_string('error_queue_failed', 'local_assignmentaifeedback'),
         ];
     }
 

@@ -17,12 +17,12 @@
 /**
  * External service for grading single submission
  *
- * @package    local_aigrade
+ * @package    local_assignmentaifeedback
  * @copyright  2025 Brian A. Pool, National Trail Local Schools
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_aigrade\external;
+namespace local_assignmentaifeedback\external;
 
 use external_api;
 use external_function_parameters;
@@ -89,18 +89,18 @@ class grade_single extends external_api {
         self::validate_context($context);
 
         // Check capability.
-        require_capability('local/aigrade:grade', $context);
+        require_capability('local/assignmentaifeedback:grade', $context);
 
         // Create assignment object.
         $assignment = new assign($context, $cm, $course);
 
         // Check if AI grading is enabled for this assignment.
-        $aiconfig = $DB->get_record('local_aigrade_config', ['assignmentid' => $assignment->get_instance()->id]);
+        $aiconfig = $DB->get_record('local_assignmentaifeedback_config', ['assignmentid' => $assignment->get_instance()->id]);
 
         if (!$aiconfig || !$aiconfig->enabled) {
             return [
                 'success' => false,
-                'error' => get_string('aigrade_disabled', 'local_aigrade'),
+                'error' => get_string('assignmentaifeedback_disabled', 'local_assignmentaifeedback'),
             ];
         }
 
@@ -110,22 +110,22 @@ class grade_single extends external_api {
         $assignmentid = $assignment->get_instance()->id;
 
         if (empty($params['forceregrade'])
-                && \local_aigrade\grader::get_stored_feedback_record($assignmentid, $params['userid'])) {
+                && \local_assignmentaifeedback\grader::get_stored_feedback_record($assignmentid, $params['userid'])) {
             return [
                 'success'        => false,
                 'already_graded' => true,
-                'error'          => get_string('already_has_feedback', 'local_aigrade'),
+                'error'          => get_string('already_has_feedback', 'local_assignmentaifeedback'),
             ];
         }
 
         if (!$assignment->get_user_submission($params['userid'], false)) {
             return [
                 'success' => false,
-                'error'   => get_string('error_no_submission', 'local_aigrade'),
+                'error'   => get_string('error_no_submission', 'local_assignmentaifeedback'),
             ];
         }
 
-        $queued = \local_aigrade\task\autograde_task::queue(
+        $queued = \local_assignmentaifeedback\task\autograde_task::queue(
             $cm->id,
             $params['userid'],
             true,
@@ -137,7 +137,7 @@ class grade_single extends external_api {
             'success'  => $queued,
             'queued'   => $queued,
             'regraded' => (bool) $params['forceregrade'],
-            'error'    => $queued ? '' : get_string('error_queue_failed', 'local_aigrade'),
+            'error'    => $queued ? '' : get_string('error_queue_failed', 'local_assignmentaifeedback'),
         ];
     }
 

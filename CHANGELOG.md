@@ -1,6 +1,31 @@
 # Changelog
 
-Änderungen an der FHGR-Fassung von `local_aigrade`.
+Änderungen an der FHGR-Fassung von `local_assignmentaifeedback` (bis v2.6.0-fhgr:
+`local_aigrade`). Einträge vor v3.0.0-fhgr nennen weiterhin die damaligen Namen.
+
+## v3.0.0-fhgr — 2026-09-14
+**Umbenennung:** Das Plugin heisst neu `local_assignmentaifeedback` und liegt in
+`moodle/local/assignmentaifeedback` (vormals `local_aigrade` in `moodle/local/aigrade`).
+Der alte Name stammte vom US-Ursprungsplugin „AI Grade" und beschrieb das Falsche: Das
+Plugin vergibt keine Note, sondern erzeugt einen Feedback-Vorschlag zu einer Abgabe.
+- Umbenannt wurden Komponente, Verzeichnis, Namensräume, Sprachdateien, AMD-Module,
+  CSS-Klassen, Capability (`local/assignmentaifeedback:grade`), Webservice-Funktionen,
+  Backup-/Restore-Klassen und die Tabellen `local_assignmentaifeedback_config` und
+  `local_assignmentaifeedback_feedback`.
+- **Datenübernahme:** Moodle betrachtet die umbenannte Komponente als neues Plugin und legt
+  leere Tabellen an. `db/install.php` übernimmt deshalb einmalig beim Installieren die
+  Aufgaben-Konfiguration, die gespeicherten Vorschläge, die Plugin-Einstellungen, die
+  hochgeladenen Beurteilungsraster (inklusive neu berechnetem `pathnamehash`, der die
+  Komponente enthält), die Capability-Overrides und noch eingereihte Ad-hoc-Tasks aus
+  `local_aigrade`. Bereits vorhandene Datensätze werden übersprungen, ein wiederholter
+  Lauf erzeugt keine Duplikate.
+- Die alten Tabellen bleiben stehen. `local_aigrade` erst **nach** geprüfter Übernahme
+  deinstallieren – siehe „Umstieg von `local_aigrade`" in der [README](README.md).
+- **`db/upgrade.php` wurde geleert.** Die Upgrade-Schritte von 2025012001 bis 2026090100
+  gehören zu `local_aigrade`; unter der neuen Komponente beginnt jede Installation bei
+  `db/install.xml` mit dem aktuellen Schema, und die Schritte könnten nie laufen. Die
+  Historie steht in Git und in der letzten `local_aigrade`-Fassung.
+- **Anzeigename unverändert:** „KI-Bewertungsassistenz".
 
 ## v2.6.0-fhgr — 2026-09-01
 **Umbau:** Alle KI-Anfragen laufen jetzt im Hintergrund (Ad-hoc-Task) – auch die über die

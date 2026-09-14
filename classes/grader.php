@@ -17,13 +17,13 @@
 /**
  * AI Grader class
  *
- * @package    local_aigrade
+ * @package    local_assignmentaifeedback
  * @copyright  2026 Brian A. Pool, National Trail Local Schools
  * @copyright  2026 Anpassung Hochschulkontext FH Graubünden
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_aigrade;
+namespace local_assignmentaifeedback;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -63,7 +63,7 @@ class grader {
      * Grade all submissions that do not have AI feedback yet.
      *
      * The 'count' key is always present, also on failure: it is a required field
-     * of the local_aigrade_grade_bulk external function's return structure.
+     * of the local_assignmentaifeedback_grade_bulk external function's return structure.
      *
      * @return array Result with success status, count, and any errors
      */
@@ -80,7 +80,7 @@ class grader {
             $pending = $this->get_pending_submissions();
 
             if (empty($pending)) {
-                return ['success' => false, 'count' => 0, 'error' => get_string('no_ungraded', 'local_aigrade')];
+                return ['success' => false, 'count' => 0, 'error' => get_string('no_ungraded', 'local_assignmentaifeedback')];
             }
 
             $count = 0;
@@ -131,7 +131,7 @@ class grader {
                 return [
                     'success'        => false,
                     'already_graded' => true,
-                    'error'          => get_string('already_has_feedback', 'local_aigrade'),
+                    'error'          => get_string('already_has_feedback', 'local_assignmentaifeedback'),
                 ];
             }
 
@@ -146,7 +146,7 @@ class grader {
             $submission_text = $this->get_submission_text($userid);
 
             if (empty($submission_text)) {
-                return ['success' => false, 'error' => get_string('error_no_submission', 'local_aigrade')];
+                return ['success' => false, 'error' => get_string('error_no_submission', 'local_assignmentaifeedback')];
             }
 
             $max_grade = $this->get_max_grade();
@@ -159,7 +159,7 @@ class grader {
                 return ['success' => true, 'regraded' => $force_regrade, 'feedback' => trim($feedback)];
             }
 
-            return ['success' => false, 'error' => get_string('error_no_feedback', 'local_aigrade')];
+            return ['success' => false, 'error' => get_string('error_no_feedback', 'local_assignmentaifeedback')];
 
         } catch (\Exception $e) {
             // See the note on 'retryable' in grade_submissions().
@@ -177,12 +177,12 @@ class grader {
         if ($has_rubric) {
             $instructions = $this->aiconfig->instructions_with_rubric ?? '';
             if (empty($instructions)) {
-                $instructions = get_config('local_aigrade', 'default_instructions_with_rubric');
+                $instructions = get_config('local_assignmentaifeedback', 'default_instructions_with_rubric');
             }
         } else {
             $instructions = $this->aiconfig->instructions_without_rubric ?? '';
             if (empty($instructions)) {
-                $instructions = get_config('local_aigrade', 'default_instructions_without_rubric');
+                $instructions = get_config('local_assignmentaifeedback', 'default_instructions_without_rubric');
             }
         }
         return (string)$instructions;
@@ -208,7 +208,7 @@ class grader {
      */
     private function get_rubric_text() {
         $fs    = get_file_storage();
-        $files = $fs->get_area_files($this->context->id, 'local_aigrade', 'rubric',
+        $files = $fs->get_area_files($this->context->id, 'local_assignmentaifeedback', 'rubric',
             $this->assignment->get_instance()->id, 'filename', false);
 
         foreach ($files as $file) {
@@ -238,7 +238,7 @@ class grader {
      */
     private function extract_pdf_text($file) {
         $tempdir  = make_request_directory();
-        $tempfile = $tempdir . '/aigrade_' . uniqid() . '.pdf';
+        $tempfile = $tempdir . '/assignmentaifeedback_' . uniqid() . '.pdf';
         $file->copy_content_to($tempfile);
 
         try {
@@ -249,7 +249,7 @@ class grader {
             if ($return_var === 0 && !empty($output)) {
                 $text = implode("\n", $output);
             } else {
-                $text = get_string('pdf_rubric_fallback', 'local_aigrade', $file->get_filename());
+                $text = get_string('pdf_rubric_fallback', 'local_assignmentaifeedback', $file->get_filename());
             }
 
             @unlink($tempfile);
@@ -257,7 +257,7 @@ class grader {
 
         } catch (\Exception $e) {
             @unlink($tempfile);
-            throw new \Exception(get_string('rubric_parse_error', 'local_aigrade', $e->getMessage()));
+            throw new \Exception(get_string('rubric_parse_error', 'local_assignmentaifeedback', $e->getMessage()));
         }
     }
 
@@ -279,7 +279,7 @@ class grader {
      */
     private function extract_docx_text($file) {
         $tempdir  = make_request_directory();
-        $tempfile = $tempdir . '/aigrade_' . uniqid() . '.docx';
+        $tempfile = $tempdir . '/assignmentaifeedback_' . uniqid() . '.docx';
         $file->copy_content_to($tempfile);
 
         try {
@@ -310,11 +310,11 @@ class grader {
             }
 
             @unlink($tempfile);
-            return get_string('pdf_rubric_fallback', 'local_aigrade', $file->get_filename());
+            return get_string('pdf_rubric_fallback', 'local_assignmentaifeedback', $file->get_filename());
 
         } catch (\Exception $e) {
             @unlink($tempfile);
-            throw new \Exception(get_string('rubric_parse_error', 'local_aigrade', $e->getMessage()));
+            throw new \Exception(get_string('rubric_parse_error', 'local_assignmentaifeedback', $e->getMessage()));
         }
     }
 
@@ -333,10 +333,10 @@ class grader {
         }
 
         if (empty($description)) {
-            $description = get_string('default_grading_criteria', 'local_aigrade');
+            $description = get_string('default_grading_criteria', 'local_assignmentaifeedback');
         }
 
-        return get_string('assignment_instructions_label', 'local_aigrade') . "\n" . $description;
+        return get_string('assignment_instructions_label', 'local_assignmentaifeedback') . "\n" . $description;
     }
 
     /**
@@ -384,7 +384,7 @@ class grader {
     private function has_ai_feedback($userid) {
         global $DB;
 
-        return $DB->record_exists('local_aigrade_feedback', [
+        return $DB->record_exists('local_assignmentaifeedback_feedback', [
             'assignmentid' => $this->assignment->get_instance()->id,
             'userid'       => $userid,
         ]);
@@ -416,7 +416,7 @@ class grader {
         $file_text = $this->extract_file_submission_text($submission);
         if ($file_text) {
             if (!empty($text)) {
-                $text .= "\n\n" . get_string('file_submission_separator', 'local_aigrade') . "\n\n";
+                $text .= "\n\n" . get_string('file_submission_separator', 'local_assignmentaifeedback') . "\n\n";
             }
             $text .= $file_text;
         }
@@ -461,14 +461,14 @@ class grader {
                     $file_content = $this->extract_odt_text($file);
                     break;
                 default:
-                    $file_content = get_string('unsupported_file_type', 'local_aigrade', $filename);
+                    $file_content = get_string('unsupported_file_type', 'local_assignmentaifeedback', $filename);
             }
 
             if ($file_content) {
                 if (!empty($text)) {
                     $text .= "\n\n";
                 }
-                $text .= "--- " . get_string('file_label', 'local_aigrade', $filename) . " ---\n" . $file_content;
+                $text .= "--- " . get_string('file_label', 'local_assignmentaifeedback', $filename) . " ---\n" . $file_content;
             }
         }
 
@@ -483,7 +483,7 @@ class grader {
      */
     private function extract_pptx_text($file) {
         $tempdir  = make_request_directory();
-        $tempfile = $tempdir . '/aigrade_' . uniqid() . '.pptx';
+        $tempfile = $tempdir . '/assignmentaifeedback_' . uniqid() . '.pptx';
         $file->copy_content_to($tempfile);
 
         try {
@@ -502,7 +502,7 @@ class grader {
                         $slide_count++;
                         $slide_text = strip_tags($slide_xml);
                         $slide_text = preg_replace('/\s+/', ' ', $slide_text);
-                        $text      .= "\n\n" . get_string('slide_label', 'local_aigrade', $slide_count) . "\n" . trim($slide_text);
+                        $text      .= "\n\n" . get_string('slide_label', 'local_assignmentaifeedback', $slide_count) . "\n" . trim($slide_text);
                     }
 
                     $zip->close();
@@ -512,11 +512,11 @@ class grader {
             }
 
             @unlink($tempfile);
-            return get_string('extraction_unavailable', 'local_aigrade', $file->get_filename());
+            return get_string('extraction_unavailable', 'local_assignmentaifeedback', $file->get_filename());
 
         } catch (\Exception $e) {
             @unlink($tempfile);
-            return get_string('extraction_error', 'local_aigrade', $file->get_filename());
+            return get_string('extraction_error', 'local_assignmentaifeedback', $file->get_filename());
         }
     }
 
@@ -528,7 +528,7 @@ class grader {
      */
     private function extract_odt_text($file) {
         $tempdir  = make_request_directory();
-        $tempfile = $tempdir . '/aigrade_' . uniqid() . '.odt';
+        $tempfile = $tempdir . '/assignmentaifeedback_' . uniqid() . '.odt';
         $file->copy_content_to($tempfile);
 
         try {
@@ -549,11 +549,11 @@ class grader {
             }
 
             @unlink($tempfile);
-            return get_string('extraction_unavailable', 'local_aigrade', $file->get_filename());
+            return get_string('extraction_unavailable', 'local_assignmentaifeedback', $file->get_filename());
 
         } catch (\Exception $e) {
             @unlink($tempfile);
-            return get_string('extraction_error', 'local_aigrade', $file->get_filename());
+            return get_string('extraction_error', 'local_assignmentaifeedback', $file->get_filename());
         }
     }
 
@@ -572,7 +572,7 @@ class grader {
      * @return string The complete prompt
      */
     private function build_prompt($instructions, $rubric_text, $submission_text, $max_grade) {
-        $assignment_label = get_string('assignment_instructions_label', 'local_aigrade');
+        $assignment_label = get_string('assignment_instructions_label', 'local_assignmentaifeedback');
         $has_rubric       = (strpos($rubric_text, $assignment_label) !== 0);
 
         $parts = [];
@@ -582,19 +582,19 @@ class grader {
 
         // Rubric or, as fallback, the assignment description.
         if ($has_rubric) {
-            $parts[] = get_string('grading_rubric_label', 'local_aigrade') . "\n" . $rubric_text;
+            $parts[] = get_string('grading_rubric_label', 'local_assignmentaifeedback') . "\n" . $rubric_text;
         } else {
             $parts[] = $rubric_text;
         }
 
         // The student submission to be assessed.
-        $parts[] = get_string('student_submission_label', 'local_aigrade') . "\n" . $submission_text;
+        $parts[] = get_string('student_submission_label', 'local_assignmentaifeedback') . "\n" . $submission_text;
 
         // Neutral framing.
-        $framing  = get_string('prompt_framing_heading', 'local_aigrade') . "\n";
-        $framing .= "- " . get_string('prompt_max_points', 'local_aigrade', $max_grade) . "\n";
-        $framing .= "- " . get_string('prompt_recommendation_only', 'local_aigrade') . "\n";
-        $framing .= "- " . get_string('prompt_address_language', 'local_aigrade');
+        $framing  = get_string('prompt_framing_heading', 'local_assignmentaifeedback') . "\n";
+        $framing .= "- " . get_string('prompt_max_points', 'local_assignmentaifeedback', $max_grade) . "\n";
+        $framing .= "- " . get_string('prompt_recommendation_only', 'local_assignmentaifeedback') . "\n";
+        $framing .= "- " . get_string('prompt_address_language', 'local_assignmentaifeedback');
         $parts[] = $framing;
 
         return implode("\n\n", $parts);
@@ -612,15 +612,15 @@ class grader {
      * @return string|false The AI feedback or false on error
      */
     private function call_ai_service($prompt) {
-        $backend = get_config('local_aigrade', 'ai_backend');
+        $backend = get_config('local_assignmentaifeedback', 'ai_backend');
         if ($backend === false || $backend === '') {
             $backend = 'ai_manager';
         }
 
         if ($backend === 'ai_manager') {
             if (!class_exists('\local_ai_manager\manager')) {
-                throw new \Exception(get_string('ai_error', 'local_aigrade',
-                    get_string('error_ai_manager_missing', 'local_aigrade')));
+                throw new \Exception(get_string('ai_error', 'local_assignmentaifeedback',
+                    get_string('error_ai_manager_missing', 'local_assignmentaifeedback')));
             }
             return $this->call_ai_manager($prompt);
         }
@@ -635,7 +635,7 @@ class grader {
      * @return string The generated content
      */
     private function call_ai_manager($prompt) {
-        $purpose = get_config('local_aigrade', 'ai_manager_purpose');
+        $purpose = get_config('local_assignmentaifeedback', 'ai_manager_purpose');
         if (empty($purpose)) {
             $purpose = 'feedback';
         }
@@ -644,10 +644,10 @@ class grader {
             $aimanager = new \local_ai_manager\manager($purpose);
         } catch (\Exception $e) {
             // Typically thrown when no tool/model is assigned to the chosen purpose.
-            throw new \Exception(get_string('ai_error', 'local_aigrade', $e->getMessage()));
+            throw new \Exception(get_string('ai_error', 'local_assignmentaifeedback', $e->getMessage()));
         }
 
-        $response = $aimanager->perform_request($prompt, 'local_aigrade', $this->context->id);
+        $response = $aimanager->perform_request($prompt, 'local_assignmentaifeedback', $this->context->id);
 
         if ($response->get_code() === 200) {
             return $response->get_content();
@@ -657,7 +657,7 @@ class grader {
         if (empty($message)) {
             $message = 'HTTP ' . $response->get_code();
         }
-        throw new \Exception(get_string('ai_error', 'local_aigrade', $message));
+        throw new \Exception(get_string('ai_error', 'local_assignmentaifeedback', $message));
     }
 
     /**
@@ -686,7 +686,7 @@ class grader {
             }
 
         } catch (\Exception $e) {
-            throw new \Exception(get_string('ai_error', 'local_aigrade', $e->getMessage()));
+            throw new \Exception(get_string('ai_error', 'local_assignmentaifeedback', $e->getMessage()));
         }
     }
 
@@ -711,7 +711,7 @@ class grader {
         // plugin's own table only and is NOT written into Moodle's feedback
         // comment field, so it can never be saved as the official feedback by
         // accident. Teachers can adopt it explicitly via the panel button.
-        $existing = $DB->get_record('local_aigrade_feedback', [
+        $existing = $DB->get_record('local_assignmentaifeedback_feedback', [
             'assignmentid' => $assignmentid,
             'userid'       => $userid,
         ]);
@@ -719,7 +719,7 @@ class grader {
         if ($existing) {
             $existing->feedback     = $feedback;
             $existing->timemodified = $now;
-            $DB->update_record('local_aigrade_feedback', $existing);
+            $DB->update_record('local_assignmentaifeedback_feedback', $existing);
         } else {
             $record = new \stdClass();
             $record->assignmentid = $assignmentid;
@@ -727,7 +727,7 @@ class grader {
             $record->feedback     = $feedback;
             $record->timecreated  = $now;
             $record->timemodified = $now;
-            $DB->insert_record('local_aigrade_feedback', $record);
+            $DB->insert_record('local_assignmentaifeedback_feedback', $record);
         }
 
         return true;
@@ -759,7 +759,7 @@ class grader {
     public static function get_stored_feedback_record($assignmentid, $userid) {
         global $DB;
 
-        return $DB->get_record('local_aigrade_feedback', [
+        return $DB->get_record('local_assignmentaifeedback_feedback', [
             'assignmentid' => $assignmentid,
             'userid'       => $userid,
         ]);

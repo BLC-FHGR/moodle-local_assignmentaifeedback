@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Event observers for local_aigrade.
+ * Event observers for local_assignmentaifeedback.
  *
- * @package    local_aigrade
+ * @package    local_assignmentaifeedback
  * @copyright  2026 Anpassung Hochschulkontext FH Graubünden
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -28,6 +28,6 @@ $observers = [
     [
         // Fires when a student submits an assignment for grading.
         'eventname' => '\mod_assign\event\assessable_submitted',
-        'callback'  => '\local_aigrade\observer::submission_submitted',
+        'callback'  => '\local_assignmentaifeedback\observer::submission_submitted',
     ],
 ];

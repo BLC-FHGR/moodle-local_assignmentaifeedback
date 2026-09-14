@@ -15,15 +15,15 @@
  */
 
 /**
- * Styles for local_aigrade plugin
+ * Styles for local_assignmentaifeedback plugin
  *
- * @package    local_aigrade
+ * @package    local_assignmentaifeedback
  * @copyright  2025 Brian A. Pool, National Trail Local Schools
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 /* Button container for AI Grade buttons */
-.path-mod-assign .local_aigrade-button-container {
+.path-mod-assign .local_assignmentaifeedback-button-container {
     margin: 15px 0;
     padding: 10px;
     background-color: #d9edf7;
@@ -32,19 +32,19 @@
 }
 
 /* Individual grading button */
-.path-mod-assign .aigrade-single-button {
+.path-mod-assign .assignmentaifeedback-single-button {
     margin: 10px 0;
     display: inline-block;
 }
 
 /* Bulk grading button */
-.path-mod-assign .aigrade-button-injected {
+.path-mod-assign .assignmentaifeedback-button-injected {
     margin: 10px 5px;
     display: inline-block;
 }
 
 /* Fixed AI feedback side panel (Variant B) */
-.aigrade-feedback-panel {
+.assignmentaifeedback-feedback-panel {
     position: fixed;
     top: 70px;
     right: 0;
@@ -61,7 +61,7 @@
     z-index: 1000;
 }
 
-.aigrade-feedback-panel-header {
+.assignmentaifeedback-feedback-panel-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -72,23 +72,23 @@
     border-radius: 6px 0 0 0;
 }
 
-.aigrade-feedback-panel-title {
+.assignmentaifeedback-feedback-panel-title {
     font-weight: 600;
 }
 
-.aigrade-feedback-panel-actions {
+.assignmentaifeedback-feedback-panel-actions {
     display: flex;
     align-items: center;
     gap: 4px;
     white-space: nowrap;
 }
 
-.aigrade-feedback-panel-toggle {
+.assignmentaifeedback-feedback-panel-toggle {
     padding: 0 8px;
     line-height: 1.4;
 }
 
-.aigrade-feedback-panel-toolbar {
+.assignmentaifeedback-feedback-panel-toolbar {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
@@ -98,40 +98,40 @@
     background-color: #f7fbfd;
 }
 
-.aigrade-feedback-panel-body {
+.assignmentaifeedback-feedback-panel-body {
     padding: 12px 16px;
     overflow-y: auto;
     flex: 1 1 auto;
 }
 
 /* Keep wide content (tables) scrollable inside the panel instead of overflowing. */
-.aigrade-feedback-panel-body table {
+.assignmentaifeedback-feedback-panel-body table {
     width: 100%;
     display: block;
     overflow-x: auto;
 }
 
-.aigrade-feedback-panel-body h3 {
+.assignmentaifeedback-feedback-panel-body h3 {
     font-size: 1rem;
     margin-top: 0.75rem;
 }
 
-.aigrade-feedback-panel-body h3:first-child {
+.assignmentaifeedback-feedback-panel-body h3:first-child {
     margin-top: 0;
 }
 
 /* Collapsed state: only the header bar remains visible. */
-.aigrade-feedback-panel.aigrade-collapsed {
+.assignmentaifeedback-feedback-panel.assignmentaifeedback-collapsed {
     width: auto;
 }
 
-.aigrade-feedback-panel.aigrade-collapsed .aigrade-feedback-panel-body,
-.aigrade-feedback-panel.aigrade-collapsed .aigrade-feedback-panel-toolbar {
+.assignmentaifeedback-feedback-panel.assignmentaifeedback-collapsed .assignmentaifeedback-feedback-panel-body,
+.assignmentaifeedback-feedback-panel.assignmentaifeedback-collapsed .assignmentaifeedback-feedback-panel-toolbar {
     display: none;
 }
 
 @media (max-width: 768px) {
-    .aigrade-feedback-panel {
+    .assignmentaifeedback-feedback-panel {
         top: 0;
         max-height: 100vh;
         border-radius: 0;

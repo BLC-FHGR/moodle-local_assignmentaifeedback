@@ -20,7 +20,7 @@
  * read-only in a side panel; it is NOT written into Moodle's feedback comment
  * field. Teachers can adopt it explicitly via the "apply" button.
  *
- * @module     local_aigrade/grade_single
+ * @module     local_assignmentaifeedback/grade_single
  * @copyright  2025 Brian A. Pool, National Trail Local Schools
  * @copyright  2026 Anpassung Hochschulkontext FH Graubünden
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -175,24 +175,24 @@ define(['jquery'], function($) {
 
             var buildPanel = function() {
                 var panel = document.createElement('div');
-                panel.id = 'aigrade-feedback-panel';
-                panel.className = 'aigrade-feedback-panel';
+                panel.id = 'assignmentaifeedback-feedback-panel';
+                panel.className = 'assignmentaifeedback-feedback-panel';
 
                 var header = document.createElement('div');
-                header.className = 'aigrade-feedback-panel-header';
+                header.className = 'assignmentaifeedback-feedback-panel-header';
 
                 var title = document.createElement('span');
-                title.className = 'aigrade-feedback-panel-title';
+                title.className = 'assignmentaifeedback-feedback-panel-title';
                 title.textContent = strings.paneltitle || 'KI-Feedback';
 
                 var toggle = document.createElement('button');
                 toggle.type = 'button';
-                toggle.className = 'btn btn-sm aigrade-feedback-panel-toggle';
+                toggle.className = 'btn btn-sm assignmentaifeedback-feedback-panel-toggle';
                 toggle.setAttribute('aria-label', strings.panelcollapse || 'Ein-/ausklappen');
                 toggle.textContent = '⟩';
                 toggle.addEventListener('click', function() {
-                    panel.classList.toggle('aigrade-collapsed');
-                    toggle.textContent = panel.classList.contains('aigrade-collapsed') ? '⟨' : '⟩';
+                    panel.classList.toggle('assignmentaifeedback-collapsed');
+                    toggle.textContent = panel.classList.contains('assignmentaifeedback-collapsed') ? '⟨' : '⟩';
                 });
 
                 header.appendChild(title);
@@ -201,11 +201,11 @@ define(['jquery'], function($) {
                 // Toolbar with the actions (kept out of the header so the long
                 // "apply" label does not overflow the narrow panel).
                 var toolbar = document.createElement('div');
-                toolbar.className = 'aigrade-feedback-panel-toolbar';
+                toolbar.className = 'assignmentaifeedback-feedback-panel-toolbar';
 
                 var apply = document.createElement('button');
                 apply.type = 'button';
-                apply.className = 'btn btn-secondary btn-sm aigrade-feedback-panel-apply';
+                apply.className = 'btn btn-secondary btn-sm assignmentaifeedback-feedback-panel-apply';
                 apply.textContent = strings.apply || 'Ins Feedback-Feld übernehmen';
                 apply.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -214,7 +214,7 @@ define(['jquery'], function($) {
 
                 var jump = document.createElement('button');
                 jump.type = 'button';
-                jump.className = 'btn btn-link btn-sm aigrade-feedback-panel-jump';
+                jump.className = 'btn btn-link btn-sm assignmentaifeedback-feedback-panel-jump';
                 jump.textContent = strings.paneljump || 'Zum Feedback-Feld';
                 jump.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -225,7 +225,7 @@ define(['jquery'], function($) {
                 toolbar.appendChild(jump);
 
                 var body = document.createElement('div');
-                body.className = 'aigrade-feedback-panel-body';
+                body.className = 'assignmentaifeedback-feedback-panel-body';
 
                 panel.appendChild(header);
                 panel.appendChild(toolbar);
@@ -235,16 +235,16 @@ define(['jquery'], function($) {
             };
 
             var showPanel = function(html) {
-                var panel = document.getElementById('aigrade-feedback-panel') || buildPanel();
-                panel.querySelector('.aigrade-feedback-panel-body').innerHTML = html;
+                var panel = document.getElementById('assignmentaifeedback-feedback-panel') || buildPanel();
+                panel.querySelector('.assignmentaifeedback-feedback-panel-body').innerHTML = html;
                 panel.style.display = '';
             };
 
             var hidePanel = function() {
-                var panel = document.getElementById('aigrade-feedback-panel');
+                var panel = document.getElementById('assignmentaifeedback-feedback-panel');
                 if (panel) {
                     panel.style.display = 'none';
-                    panel.querySelector('.aigrade-feedback-panel-body').innerHTML = '';
+                    panel.querySelector('.assignmentaifeedback-feedback-panel-body').innerHTML = '';
                 }
             };
 
@@ -343,13 +343,13 @@ define(['jquery'], function($) {
             };
 
             var insertButton = function() {
-                if ($('.aigrade-single-button').length > 0) {
+                if ($('.assignmentaifeedback-single-button').length > 0) {
                     return true;
                 }
 
                 var button = $('<button>')
                     .attr('type', 'button')
-                    .addClass('btn btn-primary aigrade-single-button')
+                    .addClass('btn btn-primary assignmentaifeedback-single-button')
                     .text(buttonText)
                     .data('force-regrade', false)
                     .on('click', function() {
@@ -414,7 +414,7 @@ define(['jquery'], function($) {
                     });
 
                 var container = $('<div>')
-                    .addClass('local_aigrade-button-container')
+                    .addClass('local_assignmentaifeedback-button-container')
                     .append(button);
 
                 var inserted = false;

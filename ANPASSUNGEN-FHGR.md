@@ -3,6 +3,14 @@
 Basis: `local_aigrade` v1.7.2 (Brian A. Pool, National Trail Local Schools, GPLv3).
 Angepasste Version: **v2.1.0-fhgr** (`$plugin->version = 2026082001`).
 
+> **Hinweis:** Dieses Dokument beschreibt den Umbau, wie er damals stattgefunden hat, und
+> nennt deshalb durchgehend die alten Namen `local_aigrade`, `moodle/local/aigrade`,
+> `local_aigrade_config` und `local_aigrade_feedback`. Seit **v3.0.0-fhgr** heisst die
+> Komponente `local_assignmentaifeedback` und liegt in `moodle/local/assignmentaifeedback`;
+> die Tabellen heissen entsprechend `local_assignmentaifeedback_config` und
+> `local_assignmentaifeedback_feedback`. Siehe [CHANGELOG.md](CHANGELOG.md) und
+> [README.md](README.md).
+
 ## Ziel
 Umbau vom US-K-12-Werkzeug zu einer schlanken **Bewertungsunterstützung für Dozierende**
 im Hochschulkontext. Leitprinzip: Das Plugin liefert Gerüst und Datenfluss – **Prompt und

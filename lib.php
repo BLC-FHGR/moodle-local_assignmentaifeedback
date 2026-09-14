@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Library functions for local_aigrade
+ * Library functions for local_assignmentaifeedback
  *
- * @package    local_aigrade
+ * @package    local_assignmentaifeedback
  * @copyright  2026 Brian A. Pool, National Trail Local Schools
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -30,7 +30,7 @@ defined('MOODLE_INTERNAL') || die();
  * @param object $formwrapper The moodleform_mod instance
  * @param object $mform The MoodleQuickForm instance
  */
-function local_aigrade_coursemodule_standard_elements($formwrapper, $mform) {
+function local_assignmentaifeedback_coursemodule_standard_elements($formwrapper, $mform) {
     global $DB, $PAGE;
     
     $current = $formwrapper->get_current();
@@ -47,75 +47,75 @@ function local_aigrade_coursemodule_standard_elements($formwrapper, $mform) {
     if ($update) {
         $cm = get_coursemodule_from_id('assign', $update);
         if ($cm) {
-            $aiconfig = $DB->get_record('local_aigrade_config', ['assignmentid' => $cm->instance]);
+            $aiconfig = $DB->get_record('local_assignmentaifeedback_config', ['assignmentid' => $cm->instance]);
         }
     }
     
     // Add AI Grading section
-    $mform->addElement('header', 'aigrade_header', get_string('aigrade', 'local_aigrade'));
+    $mform->addElement('header', 'assignmentaifeedback_header', get_string('assignmentaifeedback', 'local_assignmentaifeedback'));
     
     // Add warning message
-    $mform->addElement('static', 'aigrade_warning', '', get_string('aigrade_warning_text', 'local_aigrade'));
+    $mform->addElement('static', 'assignmentaifeedback_warning', '', get_string('assignmentaifeedback_warning_text', 'local_assignmentaifeedback'));
         
     // Enable AI grading checkbox
-    $mform->addElement('advcheckbox', 'aigrade_enabled', get_string('aigrade', 'local_aigrade'));
-    $mform->addHelpButton('aigrade_enabled', 'aigrade', 'local_aigrade');
+    $mform->addElement('advcheckbox', 'assignmentaifeedback_enabled', get_string('assignmentaifeedback', 'local_assignmentaifeedback'));
+    $mform->addHelpButton('assignmentaifeedback_enabled', 'assignmentaifeedback', 'local_assignmentaifeedback');
     if ($aiconfig) {
-        $mform->setDefault('aigrade_enabled', $aiconfig->enabled);
+        $mform->setDefault('assignmentaifeedback_enabled', $aiconfig->enabled);
     }
 
     // Automatically grade on submission (opt-in, runs asynchronously via cron).
-    $mform->addElement('advcheckbox', 'aigrade_auto_grade', get_string('aigrade_auto_grade', 'local_aigrade'));
-    $mform->addHelpButton('aigrade_auto_grade', 'aigrade_auto_grade', 'local_aigrade');
-    $mform->setType('aigrade_auto_grade', PARAM_INT);
-    $mform->disabledIf('aigrade_auto_grade', 'aigrade_enabled');
+    $mform->addElement('advcheckbox', 'assignmentaifeedback_auto_grade', get_string('assignmentaifeedback_auto_grade', 'local_assignmentaifeedback'));
+    $mform->addHelpButton('assignmentaifeedback_auto_grade', 'assignmentaifeedback_auto_grade', 'local_assignmentaifeedback');
+    $mform->setType('assignmentaifeedback_auto_grade', PARAM_INT);
+    $mform->disabledIf('assignmentaifeedback_auto_grade', 'assignmentaifeedback_enabled');
     if ($aiconfig && isset($aiconfig->auto_grade)) {
-        $mform->setDefault('aigrade_auto_grade', $aiconfig->auto_grade);
+        $mform->setDefault('assignmentaifeedback_auto_grade', $aiconfig->auto_grade);
     }
 
     // AI instructions WITH rubric - full Moodle editor
-    $mform->addElement('editor', 'aigrade_instructions_with_rubric_editor',
-        get_string('aigrade_instructions_with_rubric_field', 'local_aigrade'),
+    $mform->addElement('editor', 'assignmentaifeedback_instructions_with_rubric_editor',
+        get_string('assignmentaifeedback_instructions_with_rubric_field', 'local_assignmentaifeedback'),
         ['rows' => 8],
         ['maxfiles' => 0, 'noclean' => true, 'context' => \context_system::instance()]);
-    $mform->addHelpButton('aigrade_instructions_with_rubric_editor', 'aigrade_instructions_with_rubric_field', 'local_aigrade');
-    $mform->disabledIf('aigrade_instructions_with_rubric_editor', 'aigrade_enabled');
+    $mform->addHelpButton('assignmentaifeedback_instructions_with_rubric_editor', 'assignmentaifeedback_instructions_with_rubric_field', 'local_assignmentaifeedback');
+    $mform->disabledIf('assignmentaifeedback_instructions_with_rubric_editor', 'assignmentaifeedback_enabled');
     if ($aiconfig && !empty($aiconfig->instructions_with_rubric)) {
-        $mform->setDefault('aigrade_instructions_with_rubric_editor', [
+        $mform->setDefault('assignmentaifeedback_instructions_with_rubric_editor', [
             'text'   => $aiconfig->instructions_with_rubric,
             'format' => FORMAT_HTML,
         ]);
     } else {
-        $default = get_config('local_aigrade', 'default_instructions_with_rubric');
-        $mform->setDefault('aigrade_instructions_with_rubric_editor', [
+        $default = get_config('local_assignmentaifeedback', 'default_instructions_with_rubric');
+        $mform->setDefault('assignmentaifeedback_instructions_with_rubric_editor', [
             'text'   => (string)$default,
             'format' => FORMAT_HTML,
         ]);
     }
     
     // AI instructions WITHOUT rubric - full Moodle editor
-    $mform->addElement('editor', 'aigrade_instructions_without_rubric_editor',
-        get_string('aigrade_instructions_without_rubric_field', 'local_aigrade'),
+    $mform->addElement('editor', 'assignmentaifeedback_instructions_without_rubric_editor',
+        get_string('assignmentaifeedback_instructions_without_rubric_field', 'local_assignmentaifeedback'),
         ['rows' => 8],
         ['maxfiles' => 0, 'noclean' => true, 'context' => \context_system::instance()]);
-    $mform->addHelpButton('aigrade_instructions_without_rubric_editor', 'aigrade_instructions_without_rubric_field', 'local_aigrade');
-    $mform->disabledIf('aigrade_instructions_without_rubric_editor', 'aigrade_enabled');
+    $mform->addHelpButton('assignmentaifeedback_instructions_without_rubric_editor', 'assignmentaifeedback_instructions_without_rubric_field', 'local_assignmentaifeedback');
+    $mform->disabledIf('assignmentaifeedback_instructions_without_rubric_editor', 'assignmentaifeedback_enabled');
     if ($aiconfig && !empty($aiconfig->instructions_without_rubric)) {
-        $mform->setDefault('aigrade_instructions_without_rubric_editor', [
+        $mform->setDefault('assignmentaifeedback_instructions_without_rubric_editor', [
             'text'   => $aiconfig->instructions_without_rubric,
             'format' => FORMAT_HTML,
         ]);
     } else {
-        $default = get_config('local_aigrade', 'default_instructions_without_rubric');
-        $mform->setDefault('aigrade_instructions_without_rubric_editor', [
+        $default = get_config('local_assignmentaifeedback', 'default_instructions_without_rubric');
+        $mform->setDefault('assignmentaifeedback_instructions_without_rubric_editor', [
             'text'   => (string)$default,
             'format' => FORMAT_HTML,
         ]);
     }
     
     // Rubric file upload
-    $mform->addElement('filemanager', 'aigrade_rubric', 
-        get_string('aigrade_rubric', 'local_aigrade'), 
+    $mform->addElement('filemanager', 'assignmentaifeedback_rubric', 
+        get_string('assignmentaifeedback_rubric', 'local_assignmentaifeedback'), 
         null,
         array(
             'subdirs' => 0,
@@ -123,8 +123,8 @@ function local_aigrade_coursemodule_standard_elements($formwrapper, $mform) {
             'maxfiles' => 1,
             'accepted_types' => array('.pdf', '.txt', '.docx', '.doc')
         ));
-    $mform->addHelpButton('aigrade_rubric', 'aigrade_rubric', 'local_aigrade');
-    $mform->disabledIf('aigrade_rubric', 'aigrade_enabled');
+    $mform->addHelpButton('assignmentaifeedback_rubric', 'assignmentaifeedback_rubric', 'local_assignmentaifeedback');
+    $mform->disabledIf('assignmentaifeedback_rubric', 'assignmentaifeedback_enabled');
 }
 
 /**
@@ -132,7 +132,7 @@ function local_aigrade_coursemodule_standard_elements($formwrapper, $mform) {
  *
  * @param object $formwrapper
  */
-function local_aigrade_coursemodule_definition_after_data($formwrapper) {
+function local_assignmentaifeedback_coursemodule_definition_after_data($formwrapper) {
     global $DB;
     
     $current = $formwrapper->get_current();
@@ -151,22 +151,22 @@ function local_aigrade_coursemodule_definition_after_data($formwrapper) {
     $context = \context_module::instance($current->coursemodule);
     
     // Prepare the draft area
-    $draftitemid = file_get_submitted_draft_itemid('aigrade_rubric');
+    $draftitemid = file_get_submitted_draft_itemid('assignmentaifeedback_rubric');
     
     file_prepare_draft_area(
         $draftitemid,
         $context->id,
-        'local_aigrade',
+        'local_assignmentaifeedback',
         'rubric',
         $assignmentid,
         array('subdirs' => 0, 'maxfiles' => 1, 'maxbytes' => 10485760)
     );
     
     // Load existing config data
-    $config = $DB->get_record('local_aigrade_config', ['assignmentid' => $assignmentid]);
+    $config = $DB->get_record('local_assignmentaifeedback_config', ['assignmentid' => $assignmentid]);
     
     if ($config) {
-        $formwrapper->set_data(array('aigrade_rubric' => $draftitemid));
+        $formwrapper->set_data(array('assignmentaifeedback_rubric' => $draftitemid));
     }
 }
 
@@ -177,7 +177,7 @@ function local_aigrade_coursemodule_definition_after_data($formwrapper) {
  * @param object $course
  * @return object Modified data
  */
-function local_aigrade_coursemodule_edit_post_actions($data, $course) {
+function local_assignmentaifeedback_coursemodule_edit_post_actions($data, $course) {
     global $DB;
     
     // Only process assignment module
@@ -193,25 +193,25 @@ function local_aigrade_coursemodule_edit_post_actions($data, $course) {
     $assignmentid = $data->instance;
     
     // Check if config exists
-    $config = $DB->get_record('local_aigrade_config', ['assignmentid' => $assignmentid]);
+    $config = $DB->get_record('local_assignmentaifeedback_config', ['assignmentid' => $assignmentid]);
     
     $record = new stdClass();
     $record->assignmentid = $assignmentid;
-    $record->enabled = isset($data->aigrade_enabled) ? $data->aigrade_enabled : 0;
-    $record->auto_grade = isset($data->aigrade_auto_grade) ? $data->aigrade_auto_grade : 0;
+    $record->enabled = isset($data->assignmentaifeedback_enabled) ? $data->assignmentaifeedback_enabled : 0;
+    $record->auto_grade = isset($data->assignmentaifeedback_auto_grade) ? $data->assignmentaifeedback_auto_grade : 0;
 
     // Editor elements submit as arrays with 'text' and 'format' keys.
-    if (isset($data->aigrade_instructions_with_rubric_editor)) {
-        $record->instructions_with_rubric = is_array($data->aigrade_instructions_with_rubric_editor)
-            ? $data->aigrade_instructions_with_rubric_editor['text']
-            : $data->aigrade_instructions_with_rubric_editor;
+    if (isset($data->assignmentaifeedback_instructions_with_rubric_editor)) {
+        $record->instructions_with_rubric = is_array($data->assignmentaifeedback_instructions_with_rubric_editor)
+            ? $data->assignmentaifeedback_instructions_with_rubric_editor['text']
+            : $data->assignmentaifeedback_instructions_with_rubric_editor;
     } else {
         $record->instructions_with_rubric = '';
     }
-    if (isset($data->aigrade_instructions_without_rubric_editor)) {
-        $record->instructions_without_rubric = is_array($data->aigrade_instructions_without_rubric_editor)
-            ? $data->aigrade_instructions_without_rubric_editor['text']
-            : $data->aigrade_instructions_without_rubric_editor;
+    if (isset($data->assignmentaifeedback_instructions_without_rubric_editor)) {
+        $record->instructions_without_rubric = is_array($data->assignmentaifeedback_instructions_without_rubric_editor)
+            ? $data->assignmentaifeedback_instructions_without_rubric_editor['text']
+            : $data->assignmentaifeedback_instructions_without_rubric_editor;
     } else {
         $record->instructions_without_rubric = '';
     }
@@ -219,19 +219,19 @@ function local_aigrade_coursemodule_edit_post_actions($data, $course) {
     
     if ($config) {
         $record->id = $config->id;
-        $DB->update_record('local_aigrade_config', $record);
+        $DB->update_record('local_assignmentaifeedback_config', $record);
     } else {
         $record->timecreated = time();
-        $DB->insert_record('local_aigrade_config', $record);
+        $DB->insert_record('local_assignmentaifeedback_config', $record);
     }
     
     // Handle file upload
-    if (isset($data->aigrade_rubric)) {
+    if (isset($data->assignmentaifeedback_rubric)) {
         $context = context_module::instance($data->coursemodule);
         file_save_draft_area_files(
-            $data->aigrade_rubric,
+            $data->assignmentaifeedback_rubric,
             $context->id,
-            'local_aigrade',
+            'local_assignmentaifeedback',
             'rubric',
             $assignmentid,
             array('subdirs' => 0, 'maxfiles' => 1, 'maxbytes' => 10485760)
@@ -246,7 +246,7 @@ function local_aigrade_coursemodule_edit_post_actions($data, $course) {
  *
  * @return string Empty string (JavaScript loaded via AMD)
  */
-function local_aigrade_before_footer() {
+function local_assignmentaifeedback_before_footer() {
     global $PAGE, $DB;
 
     // Only on assignment module pages
@@ -264,14 +264,14 @@ function local_aigrade_before_footer() {
     }
     
     // Check if AI Grade is enabled for this assignment
-    $config = $DB->get_record('local_aigrade_config', ['assignmentid' => $cm->instance]);
+    $config = $DB->get_record('local_assignmentaifeedback_config', ['assignmentid' => $cm->instance]);
     if (!$config || !$config->enabled) {
         return '';
     }
     
     // Check capability
     $context = context_module::instance($cm->id);
-    if (!has_capability('local/aigrade:grade', $context)) {
+    if (!has_capability('local/assignmentaifeedback:grade', $context)) {
         return '';
     }
     
@@ -281,7 +281,7 @@ function local_aigrade_before_footer() {
     $is_individual = ($action === 'grader');
     
     // Get custom AI name
-    $ai_name = get_config('local_aigrade', 'ai_name');
+    $ai_name = get_config('local_assignmentaifeedback', 'ai_name');
     if (empty($ai_name)) {
         $ai_name = 'AI';
     }
@@ -291,29 +291,29 @@ function local_aigrade_before_footer() {
     
     // Load appropriate AMD module
     if ($is_individual) {
-        $url = new moodle_url('/local/aigrade/grade_single.php', ['id' => $cm->id, 'userid' => $userid]);
-        $button_text = get_string('button_grade_single', 'local_aigrade', $ai_name);
+        $url = new moodle_url('/local/assignmentaifeedback/grade_single.php', ['id' => $cm->id, 'userid' => $userid]);
+        $button_text = get_string('button_grade_single', 'local_assignmentaifeedback', $ai_name);
 
         $strings = [
-            'inprogress'      => get_string('js_grading_single', 'local_aigrade'),
-            'regrade'         => get_string('js_regrade', 'local_aigrade', $ai_name),
-            'confirmregrade'  => get_string('js_confirm_regrade', 'local_aigrade'),
-            'errorprefix'     => get_string('js_error_prefix', 'local_aigrade'),
-            'errorunknown'    => get_string('js_error_unknown', 'local_aigrade'),
-            'errorserver'     => get_string('js_error_server', 'local_aigrade'),
-            'paneltitle'      => get_string('js_panel_title', 'local_aigrade', $ai_name),
-            'paneljump'       => get_string('js_panel_jump', 'local_aigrade'),
-            'panelcollapse'   => get_string('js_panel_collapse', 'local_aigrade'),
-            'apply'           => get_string('js_panel_apply', 'local_aigrade'),
-            'applyconfirm'    => get_string('js_panel_apply_confirm', 'local_aigrade'),
-            'applyfailed'     => get_string('js_panel_apply_failed', 'local_aigrade'),
-            'queued'          => get_string('js_queued', 'local_aigrade'),
-            'pendingtimeout'  => get_string('js_pending_timeout', 'local_aigrade'),
+            'inprogress'      => get_string('js_grading_single', 'local_assignmentaifeedback'),
+            'regrade'         => get_string('js_regrade', 'local_assignmentaifeedback', $ai_name),
+            'confirmregrade'  => get_string('js_confirm_regrade', 'local_assignmentaifeedback'),
+            'errorprefix'     => get_string('js_error_prefix', 'local_assignmentaifeedback'),
+            'errorunknown'    => get_string('js_error_unknown', 'local_assignmentaifeedback'),
+            'errorserver'     => get_string('js_error_server', 'local_assignmentaifeedback'),
+            'paneltitle'      => get_string('js_panel_title', 'local_assignmentaifeedback', $ai_name),
+            'paneljump'       => get_string('js_panel_jump', 'local_assignmentaifeedback'),
+            'panelcollapse'   => get_string('js_panel_collapse', 'local_assignmentaifeedback'),
+            'apply'           => get_string('js_panel_apply', 'local_assignmentaifeedback'),
+            'applyconfirm'    => get_string('js_panel_apply_confirm', 'local_assignmentaifeedback'),
+            'applyfailed'     => get_string('js_panel_apply_failed', 'local_assignmentaifeedback'),
+            'queued'          => get_string('js_queued', 'local_assignmentaifeedback'),
+            'pendingtimeout'  => get_string('js_pending_timeout', 'local_assignmentaifeedback'),
         ];
 
-        $feedbackurl = new moodle_url('/local/aigrade/get_feedback.php', ['id' => $cm->id]);
+        $feedbackurl = new moodle_url('/local/assignmentaifeedback/get_feedback.php', ['id' => $cm->id]);
 
-        $PAGE->requires->js_call_amd('local_aigrade/grade_single', 'init', [
+        $PAGE->requires->js_call_amd('local_assignmentaifeedback/grade_single', 'init', [
             $url->out(false),
             $button_text,
             $sesskey,
@@ -321,20 +321,20 @@ function local_aigrade_before_footer() {
             $feedbackurl->out(false)
         ]);
     } else {
-        $url = new moodle_url('/local/aigrade/grade.php', ['id' => $cm->id]);
-        $button_text = get_string('button_grade_bulk', 'local_aigrade', $ai_name);
+        $url = new moodle_url('/local/assignmentaifeedback/grade.php', ['id' => $cm->id]);
+        $button_text = get_string('button_grade_bulk', 'local_assignmentaifeedback', $ai_name);
 
         $strings = [
-            'confirmbulk'  => get_string('js_confirm_bulk', 'local_aigrade'),
-            'inprogress'   => get_string('js_grading_bulk', 'local_aigrade'),
-            'successcount' => get_string('js_success_count', 'local_aigrade'),
-            'queuedcount'  => get_string('js_queued_count', 'local_aigrade'),
-            'errorprefix'  => get_string('js_error_prefix', 'local_aigrade'),
-            'errorunknown' => get_string('js_error_unknown', 'local_aigrade'),
-            'errorserver'  => get_string('js_error_server', 'local_aigrade'),
+            'confirmbulk'  => get_string('js_confirm_bulk', 'local_assignmentaifeedback'),
+            'inprogress'   => get_string('js_grading_bulk', 'local_assignmentaifeedback'),
+            'successcount' => get_string('js_success_count', 'local_assignmentaifeedback'),
+            'queuedcount'  => get_string('js_queued_count', 'local_assignmentaifeedback'),
+            'errorprefix'  => get_string('js_error_prefix', 'local_assignmentaifeedback'),
+            'errorunknown' => get_string('js_error_unknown', 'local_assignmentaifeedback'),
+            'errorserver'  => get_string('js_error_server', 'local_assignmentaifeedback'),
         ];
 
-        $PAGE->requires->js_call_amd('local_aigrade/grade_bulk', 'init', [
+        $PAGE->requires->js_call_amd('local_assignmentaifeedback/grade_bulk', 'init', [
             $url->out(false),
             $button_text,
             $sesskey,
@@ -350,13 +350,13 @@ function local_aigrade_before_footer() {
  *
  * @return array
  */
-function local_aigrade_backup_callback() {
+function local_assignmentaifeedback_backup_callback() {
     return [
         'backup' => [
-            'mod/assign' => 'backup/moodle2/backup_local_aigrade_plugin.class.php',
+            'mod/assign' => 'backup/moodle2/backup_local_assignmentaifeedback_plugin.class.php',
         ],
         'restore' => [
-            'mod/assign' => 'backup/moodle2/restore_local_aigrade_plugin.class.php',
+            'mod/assign' => 'backup/moodle2/restore_local_assignmentaifeedback_plugin.class.php',
         ],
     ];
 }

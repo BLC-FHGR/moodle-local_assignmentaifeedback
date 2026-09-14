@@ -17,7 +17,7 @@
 /**
  * AI Grading interface for bulk grading - AJAX endpoint
  *
- * @package    local_aigrade
+ * @package    local_assignmentaifeedback
  * @copyright  2025 Brian A. Pool, National Trail Local Schools
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -36,15 +36,15 @@ $context = context_module::instance($cm->id);
 
 require_login($course, true, $cm);
 require_sesskey();
-require_capability('local/aigrade:grade', $context);
+require_capability('local/assignmentaifeedback:grade', $context);
 
 $assignment = new assign($context, $cm, $course);
 
 // Check if AI grading is enabled for this assignment
-$aiconfig = $DB->get_record('local_aigrade_config', ['assignmentid' => $assignment->get_instance()->id]);
+$aiconfig = $DB->get_record('local_assignmentaifeedback_config', ['assignmentid' => $assignment->get_instance()->id]);
 
 if (!$aiconfig || !$aiconfig->enabled) {
-    echo json_encode(['success' => false, 'error' => get_string('aigrade_disabled', 'local_aigrade')]);
+    echo json_encode(['success' => false, 'error' => get_string('assignmentaifeedback_disabled', 'local_assignmentaifeedback')]);
     die();
 }
 
@@ -62,23 +62,23 @@ if ($action === 'grade') {
     // background task per submission is queued instead: each is retried on its own
     // if the AI service is unavailable, and the panel shows each suggestion as it
     // arrives.
-    $grader  = new \local_aigrade\grader($assignment, $context, $aiconfig);
+    $grader  = new \local_assignmentaifeedback\grader($assignment, $context, $aiconfig);
     $pending = $grader->get_pending_submissions();
 
     if (empty($pending)) {
-        echo json_encode(['success' => false, 'count' => 0, 'error' => get_string('no_ungraded', 'local_aigrade')]);
+        echo json_encode(['success' => false, 'count' => 0, 'error' => get_string('no_ungraded', 'local_assignmentaifeedback')]);
         die();
     }
 
     $queued = 0;
     foreach (array_keys($pending) as $pendinguserid) {
-        if (\local_aigrade\task\autograde_task::queue($cm->id, $pendinguserid, true, false, (int) $USER->id)) {
+        if (\local_assignmentaifeedback\task\autograde_task::queue($cm->id, $pendinguserid, true, false, (int) $USER->id)) {
             $queued++;
         }
     }
 
     if ($queued === 0) {
-        echo json_encode(['success' => false, 'count' => 0, 'error' => get_string('error_queue_failed', 'local_aigrade')]);
+        echo json_encode(['success' => false, 'count' => 0, 'error' => get_string('error_queue_failed', 'local_assignmentaifeedback')]);
         die();
     }
 
@@ -86,4 +86,4 @@ if ($action === 'grade') {
     die();
 }
 
-echo json_encode(['success' => false, 'error' => get_string('error_invalid_action', 'local_aigrade')]);
+echo json_encode(['success' => false, 'error' => get_string('error_invalid_action', 'local_assignmentaifeedback')]);

@@ -17,7 +17,7 @@
 /**
  * External services for AI Grade
  *
- * @package    local_aigrade
+ * @package    local_assignmentaifeedback
  * @copyright  2025 Brian A. Pool, National Trail Local Schools
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -25,20 +25,20 @@
 defined('MOODLE_INTERNAL') || die();
 
 $functions = [
-    'local_aigrade_grade_bulk' => [
-        'classname'   => 'local_aigrade\external\grade_bulk',
+    'local_assignmentaifeedback_grade_bulk' => [
+        'classname'   => 'local_assignmentaifeedback\external\grade_bulk',
         'methodname'  => 'execute',
         'description' => 'Queue AI grading for all ungraded submissions',
         'type'        => 'write',
         'ajax'        => true,
-        'capabilities'=> 'local/aigrade:grade',
+        'capabilities'=> 'local/assignmentaifeedback:grade',
     ],
-    'local_aigrade_grade_single' => [
-        'classname'   => 'local_aigrade\external\grade_single',
+    'local_assignmentaifeedback_grade_single' => [
+        'classname'   => 'local_assignmentaifeedback\external\grade_single',
         'methodname'  => 'execute',
         'description' => 'Queue AI grading for a single submission',
         'type'        => 'write',
         'ajax'        => true,
-        'capabilities'=> 'local/aigrade:grade',
+        'capabilities'=> 'local/assignmentaifeedback:grade',
     ],
 ];

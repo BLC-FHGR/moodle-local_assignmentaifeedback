@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 /**
- * Backup task for local_aigrade plugin
+ * Backup task for local_assignmentaifeedback plugin
  *
- * @package    local_aigrade
+ * @package    local_assignmentaifeedback
  * @copyright  2025 Brian A. Pool, National Trail Local Schools
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -24,9 +24,9 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Backup plugin class for local_aigrade - extends assign activity
+ * Backup plugin class for local_assignmentaifeedback - extends assign activity
  */
-class backup_local_aigrade_plugin extends backup_local_plugin {
+class backup_local_assignmentaifeedback_plugin extends backup_local_plugin {
 
     /**
      * Define the structure for backing up the plugin data
@@ -44,10 +44,10 @@ class backup_local_aigrade_plugin extends backup_local_plugin {
         // Add it to the parent.
         $plugin->add_child($pluginwrapper);
         
-        // Define the aigrade config element.
+        // Define the assignmentaifeedback config element.
         // Note: We backup the configuration but not the rubric files.
         // Teachers will need to re-upload rubrics after restore.
-        $aigradeconfig = new backup_nested_element('aigrade_config', ['id'], [
+        $assignmentaifeedbackconfig = new backup_nested_element('assignmentaifeedback_config', ['id'], [
             'enabled',
             'auto_grade',
             'instructions_with_rubric',
@@ -58,10 +58,10 @@ class backup_local_aigrade_plugin extends backup_local_plugin {
         ]);
         
         // Add config to wrapper.
-        $pluginwrapper->add_child($aigradeconfig);
+        $pluginwrapper->add_child($assignmentaifeedbackconfig);
         
         // Set source to populate the data - only if this assignment has AI Grade config.
-        $aigradeconfig->set_source_table('local_aigrade_config', ['assignmentid' => backup::VAR_ACTIVITYID]);
+        $assignmentaifeedbackconfig->set_source_table('local_assignmentaifeedback_config', ['assignmentid' => backup::VAR_ACTIVITYID]);
         
         // Note: Files (rubric) are NOT backed up to avoid restore complexity.
         // Teachers must re-upload rubrics after course restore.

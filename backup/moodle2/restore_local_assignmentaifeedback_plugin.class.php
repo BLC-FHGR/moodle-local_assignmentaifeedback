@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 /**
- * Restore task for local_aigrade plugin
+ * Restore task for local_assignmentaifeedback plugin
  *
- * @package    local_aigrade
+ * @package    local_assignmentaifeedback
  * @copyright  2025 Brian A. Pool, National Trail Local Schools
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -24,9 +24,9 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Restore plugin class for local_aigrade
+ * Restore plugin class for local_assignmentaifeedback
  */
-class restore_local_aigrade_plugin extends restore_local_plugin {
+class restore_local_assignmentaifeedback_plugin extends restore_local_plugin {
 
     /**
      * Define the structure for restoring the plugin data
@@ -37,30 +37,30 @@ class restore_local_aigrade_plugin extends restore_local_plugin {
         
         $paths = [];
         
-        // Define the path for the aigrade config element.
-        $paths[] = new restore_path_element('local_aigrade_config', 
-            $this->get_pathfor('/aigrade_config'));
+        // Define the path for the assignmentaifeedback config element.
+        $paths[] = new restore_path_element('local_assignmentaifeedback_config', 
+            $this->get_pathfor('/assignmentaifeedback_config'));
         
         return $paths;
     }
     
     /**
-     * Process the aigrade config element
+     * Process the assignmentaifeedback config element
      *
      * @param array $data The data from the backup file
      */
-    public function process_local_aigrade_config($data) {
+    public function process_local_assignmentaifeedback_config($data) {
         global $DB;
         
         $data = (object)$data;
         $oldid = $data->id;
         
         // Store data temporarily - we'll process it after the module is fully restored
-        if (!isset($this->aigrade_configs)) {
-            $this->aigrade_configs = [];
+        if (!isset($this->assignmentaifeedback_configs)) {
+            $this->assignmentaifeedback_configs = [];
         }
         
-        $this->aigrade_configs[] = $data;
+        $this->assignmentaifeedback_configs[] = $data;
         
         //error_log('AI Grade Restore Debug - Stored config for later processing, old ID: ' . $oldid);
     }
@@ -71,7 +71,7 @@ class restore_local_aigrade_plugin extends restore_local_plugin {
     public function after_restore_module() {
         global $DB;
         
-        if (empty($this->aigrade_configs)) {
+        if (empty($this->assignmentaifeedback_configs)) {
             return;
         }
         
@@ -95,7 +95,7 @@ class restore_local_aigrade_plugin extends restore_local_plugin {
         ];
 
         // Process all stored configs
-        foreach ($this->aigrade_configs as $data) {
+        foreach ($this->assignmentaifeedback_configs as $data) {
             $oldid = $data->id;
             $data->assignmentid = $newassignmentid;
 
@@ -107,13 +107,13 @@ class restore_local_aigrade_plugin extends restore_local_plugin {
             }
 
             // Check if config already exists
-            $existing = $DB->get_record('local_aigrade_config', ['assignmentid' => $newassignmentid]);
+            $existing = $DB->get_record('local_assignmentaifeedback_config', ['assignmentid' => $newassignmentid]);
 
             if ($existing) {
                 //error_log('AI Grade Restore Debug - Updating existing record ID: ' . $existing->id);
                 $data->id = $existing->id;
                 $data->timemodified = time();
-                $DB->update_record('local_aigrade_config', $data);
+                $DB->update_record('local_assignmentaifeedback_config', $data);
             } else {
                 //error_log('AI Grade Restore Debug - Creating new record');
                 unset($data->id);
@@ -121,9 +121,9 @@ class restore_local_aigrade_plugin extends restore_local_plugin {
                 $data->timemodified = time();
                 $data->rubricfile = null;
                 
-                $newid = $DB->insert_record('local_aigrade_config', $data);
+                $newid = $DB->insert_record('local_assignmentaifeedback_config', $data);
                 //error_log('AI Grade Restore Debug - New record ID: ' . $newid);
-                $this->set_mapping('local_aigrade_config', $oldid, $newid);
+                $this->set_mapping('local_assignmentaifeedback_config', $oldid, $newid);
             }
         }
     }

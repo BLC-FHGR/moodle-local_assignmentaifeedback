@@ -15,14 +15,14 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Event observer for local_aigrade
+ * Event observer for local_assignmentaifeedback
  *
- * @package    local_aigrade
+ * @package    local_assignmentaifeedback
  * @copyright  2025 Brian A. Pool, National Trail Local Schools
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_aigrade;
+namespace local_assignmentaifeedback;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -54,7 +54,7 @@ class observer {
                 return;
             }
 
-            $config = $DB->get_record('local_aigrade_config', ['assignmentid' => $cm->instance]);
+            $config = $DB->get_record('local_assignmentaifeedback_config', ['assignmentid' => $cm->instance]);
             if (!$config || empty($config->enabled) || empty($config->auto_grade)) {
                 return;
             }
@@ -66,11 +66,11 @@ class observer {
                 return;
             }
 
-            \local_aigrade\task\autograde_task::queue($cmid, $userid);
+            \local_assignmentaifeedback\task\autograde_task::queue($cmid, $userid);
 
         } catch (\Throwable $e) {
             // Never let AI grading interfere with the submission itself.
-            debugging('local_aigrade submission observer error: ' . $e->getMessage(), DEBUG_DEVELOPER);
+            debugging('local_assignmentaifeedback submission observer error: ' . $e->getMessage(), DEBUG_DEVELOPER);
         }
     }
 }

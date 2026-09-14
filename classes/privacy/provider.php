@@ -15,15 +15,15 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Privacy Subsystem implementation for local_aigrade
+ * Privacy Subsystem implementation for local_assignmentaifeedback
  *
- * @package    local_aigrade
+ * @package    local_assignmentaifeedback
  * @copyright  2025 Brian A. Pool, National Trail Local Schools
  * @copyright  2026 Anpassung Hochschulkontext FH Graubünden
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_aigrade\privacy;
+namespace local_assignmentaifeedback\privacy;
 
 use context;
 use context_module;
@@ -38,7 +38,7 @@ use core_privacy\local\request\transform;
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Privacy Subsystem for local_aigrade.
+ * Privacy Subsystem for local_assignmentaifeedback.
  */
 class provider implements
     \core_privacy\local\metadata\provider,
@@ -62,12 +62,12 @@ class provider implements
         ], 'privacy:metadata:ai_provider');
 
         // Stored AI feedback suggestions.
-        $collection->add_database_table('local_aigrade_feedback', [
-            'userid' => 'privacy:metadata:local_aigrade_feedback:userid',
-            'feedback' => 'privacy:metadata:local_aigrade_feedback:feedback',
-            'timecreated' => 'privacy:metadata:local_aigrade_feedback:timecreated',
-            'timemodified' => 'privacy:metadata:local_aigrade_feedback:timemodified',
-        ], 'privacy:metadata:local_aigrade_feedback');
+        $collection->add_database_table('local_assignmentaifeedback_feedback', [
+            'userid' => 'privacy:metadata:local_assignmentaifeedback_feedback:userid',
+            'feedback' => 'privacy:metadata:local_assignmentaifeedback_feedback:feedback',
+            'timecreated' => 'privacy:metadata:local_assignmentaifeedback_feedback:timecreated',
+            'timemodified' => 'privacy:metadata:local_assignmentaifeedback_feedback:timemodified',
+        ], 'privacy:metadata:local_assignmentaifeedback_feedback');
 
         return $collection;
     }
@@ -82,7 +82,7 @@ class provider implements
         $contextlist = new contextlist();
 
         $sql = "SELECT ctx.id
-                  FROM {local_aigrade_feedback} f
+                  FROM {local_assignmentaifeedback_feedback} f
                   JOIN {course_modules} cm ON cm.instance = f.assignmentid AND cm.module = :modid
                   JOIN {context} ctx ON ctx.instanceid = cm.id AND ctx.contextlevel = :modlevel
                  WHERE f.userid = :userid";
@@ -108,7 +108,7 @@ class provider implements
         }
 
         $sql = "SELECT f.userid
-                  FROM {local_aigrade_feedback} f
+                  FROM {local_assignmentaifeedback_feedback} f
                   JOIN {course_modules} cm ON cm.instance = f.assignmentid AND cm.module = :modid
                  WHERE cm.id = :cmid";
         $params = ['modid' => self::get_assign_moduleid(), 'cmid' => $context->instanceid];
@@ -133,7 +133,7 @@ class provider implements
             if (!$assignmentid) {
                 continue;
             }
-            $record = $DB->get_record('local_aigrade_feedback',
+            $record = $DB->get_record('local_assignmentaifeedback_feedback',
                 ['assignmentid' => $assignmentid, 'userid' => $userid]);
             if (!$record) {
                 continue;
@@ -144,7 +144,7 @@ class provider implements
                 'timemodified' => transform::datetime($record->timemodified),
             ];
             writer::with_context($context)->export_data(
-                [get_string('privacy:aifeedbackpath', 'local_aigrade')], $data);
+                [get_string('privacy:aifeedbackpath', 'local_assignmentaifeedback')], $data);
         }
     }
 
@@ -161,7 +161,7 @@ class provider implements
         }
         $assignmentid = self::get_assignmentid_from_context($context);
         if ($assignmentid) {
-            $DB->delete_records('local_aigrade_feedback', ['assignmentid' => $assignmentid]);
+            $DB->delete_records('local_assignmentaifeedback_feedback', ['assignmentid' => $assignmentid]);
         }
     }
 
@@ -181,7 +181,7 @@ class provider implements
             }
             $assignmentid = self::get_assignmentid_from_context($context);
             if ($assignmentid) {
-                $DB->delete_records('local_aigrade_feedback',
+                $DB->delete_records('local_assignmentaifeedback_feedback',
                     ['assignmentid' => $assignmentid, 'userid' => $userid]);
             }
         }
@@ -209,7 +209,7 @@ class provider implements
         }
         [$insql, $inparams] = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
         $params = array_merge(['assignmentid' => $assignmentid], $inparams);
-        $DB->delete_records_select('local_aigrade_feedback',
+        $DB->delete_records_select('local_assignmentaifeedback_feedback',
             "assignmentid = :assignmentid AND userid $insql", $params);
     }
 

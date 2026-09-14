@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * English language strings for local_aigrade (higher-education adaptation)
+ * English language strings for local_assignmentaifeedback (higher-education adaptation)
  *
- * @package    local_aigrade
+ * @package    local_assignmentaifeedback
  * @copyright  2025 Brian A. Pool, National Trail Local Schools
  * @copyright  2026 Higher-education adaptation, FH Graubünden
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -27,15 +27,15 @@ defined('MOODLE_INTERNAL') || die();
 
 // Plugin and core labels.
 $string['pluginname'] = 'AI grading assistant';
-$string['aigrade'] = 'AI grading';
-$string['aigrade_help'] = 'Enables AI-assisted grading support for this assignment. The AI provides a non-binding point recommendation and written feedback; teachers make the final grading decision.';
+$string['assignmentaifeedback'] = 'AI grading';
+$string['assignmentaifeedback_help'] = 'Enables AI-assisted grading support for this assignment. The AI provides a non-binding point recommendation and written feedback; teachers make the final grading decision.';
 
 // Capability.
-$string['aigrade:grade'] = 'Use AI to support grading of submissions';
+$string['assignmentaifeedback:grade'] = 'Use AI to support grading of submissions';
 
 // Warning in the assignment form.
-$string['aigrade_warning'] = 'AI grading notice';
-$string['aigrade_warning_text'] = '<strong>Important:</strong> Always review AI-generated recommendations and feedback critically. The AI evaluates text content only and cannot assess images, formatting, layout or visual design. The AI does not assign a grade; the final decision remains with the teacher.';
+$string['assignmentaifeedback_warning'] = 'AI grading notice';
+$string['assignmentaifeedback_warning_text'] = '<strong>Important:</strong> Always review AI-generated recommendations and feedback critically. The AI evaluates text content only and cannot assess images, formatting, layout or visual design. The AI does not assign a grade; the final decision remains with the teacher.';
 
 // Warning on the global settings page.
 $string['settings_warning_html'] = '<div class="alert alert-warning" style="margin: 20px 0; padding: 15px; background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px;">
@@ -66,8 +66,8 @@ $string['error_ai_manager_missing'] = 'The "local_ai_manager" plugin is not inst
 
 
 // Automatic grading on submission.
-$string['aigrade_auto_grade'] = 'Automatically grade on submission';
-$string['aigrade_auto_grade_help'] = 'When enabled, the AI automatically creates a feedback suggestion as soon as a student submits. Processing runs in the background (Moodle cron) and does not set a grade - the suggestion only appears in the panel. Requirements: a running cron and a configured grading account (see the plugin setting "Account for automatic grading").';
+$string['assignmentaifeedback_auto_grade'] = 'Automatically grade on submission';
+$string['assignmentaifeedback_auto_grade_help'] = 'When enabled, the AI automatically creates a feedback suggestion as soon as a student submits. Processing runs in the background (Moodle cron) and does not set a grade - the suggestion only appears in the panel. Requirements: a running cron and a configured grading account (see the plugin setting "Account for automatic grading").';
 $string['setting_autograde_user'] = 'Account for automatic grading';
 $string['setting_autograde_user_desc'] = 'Username of the account under which automatic grading runs in the background. This account must be allowed to use the local AI service (capability local/ai_manager:use), have confirmed AI usage and sufficient quota. Leave empty to instead use a teacher with grading capability in the respective course (less predictable).';
 $string['setting_autograde_timeout'] = 'Timeout for background requests';
@@ -79,20 +79,20 @@ $string['js_queued'] = 'Queued...';
 $string['js_pending_timeout'] = 'The AI suggestion is still being generated in the background. It will appear in this panel as soon as it is ready - you can leave this page and come back later.';
 
 // Per-assignment instruction fields.
-$string['aigrade_instructions_with_rubric_field'] = 'AI instructions (with rubric)';
-$string['aigrade_instructions_with_rubric_field_help'] = 'Instructions for the AI when a rubric is uploaded. These instructions fully drive the grading behaviour, together with the uploaded rubric.';
-$string['aigrade_instructions_without_rubric_field'] = 'AI instructions (without rubric)';
-$string['aigrade_instructions_without_rubric_field_help'] = 'Instructions for the AI when no rubric is uploaded. The AI grades based on the assignment description and these instructions.';
+$string['assignmentaifeedback_instructions_with_rubric_field'] = 'AI instructions (with rubric)';
+$string['assignmentaifeedback_instructions_with_rubric_field_help'] = 'Instructions for the AI when a rubric is uploaded. These instructions fully drive the grading behaviour, together with the uploaded rubric.';
+$string['assignmentaifeedback_instructions_without_rubric_field'] = 'AI instructions (without rubric)';
+$string['assignmentaifeedback_instructions_without_rubric_field_help'] = 'Instructions for the AI when no rubric is uploaded. The AI grades based on the assignment description and these instructions.';
 
 // Global default instructions (settings page).
-$string['aigrade_instructions_with_rubric'] = 'Default instructions (with rubric)';
-$string['aigrade_instructions_with_rubric_desc'] = 'Default instructions for assignments that have a rubric uploaded. This text is copied into new assignments when AI grading is enabled.';
-$string['aigrade_instructions_without_rubric'] = 'Default instructions (without rubric)';
-$string['aigrade_instructions_without_rubric_desc'] = 'Default instructions for assignments without a rubric. The AI grades based on the assignment description. This text is copied into new assignments when AI grading is enabled.';
+$string['assignmentaifeedback_instructions_with_rubric'] = 'Default instructions (with rubric)';
+$string['assignmentaifeedback_instructions_with_rubric_desc'] = 'Default instructions for assignments that have a rubric uploaded. This text is copied into new assignments when AI grading is enabled.';
+$string['assignmentaifeedback_instructions_without_rubric'] = 'Default instructions (without rubric)';
+$string['assignmentaifeedback_instructions_without_rubric_desc'] = 'Default instructions for assignments without a rubric. The AI grades based on the assignment description. This text is copied into new assignments when AI grading is enabled.';
 
 // Rubric upload.
-$string['aigrade_rubric'] = 'Grading rubric';
-$string['aigrade_rubric_help'] = 'Upload a rubric file (PDF, TXT, DOCX or DOC) that the AI will use to grade submissions.';
+$string['assignmentaifeedback_rubric'] = 'Grading rubric';
+$string['assignmentaifeedback_rubric_help'] = 'Upload a rubric file (PDF, TXT, DOCX or DOC) that the AI will use to grade submissions.';
 
 // Buttons.
 $string['button_grade_single'] = 'Grade with {$a}';
@@ -120,7 +120,7 @@ $string['extraction_error'] = 'Error extracting text: {$a}';
 // Status and error messages.
 $string['no_ungraded'] = 'No pending submissions found that still need feedback.';
 $string['already_has_feedback'] = 'This submission already has feedback. Click again to regenerate it.';
-$string['aigrade_disabled'] = 'AI grading is not enabled for this assignment.';
+$string['assignmentaifeedback_disabled'] = 'AI grading is not enabled for this assignment.';
 $string['error_no_submission'] = 'This student has not submitted any text yet. You may need to refresh the page if a submission exists.';
 $string['error_no_feedback'] = 'The AI did not return feedback.';
 $string['error_invalid_action'] = 'Invalid action.';
@@ -151,9 +151,9 @@ $string['privacy:metadata:ai_provider:submissiontext'] = 'The text content of th
 $string['privacy:metadata:ai_provider:assignmentname'] = 'The name of the assignment, sent to provide context to the AI provider.';
 $string['privacy:metadata:ai_provider:assignmentinstructions'] = 'The assignment instructions, sent as grading criteria to the AI provider.';
 $string['privacy:metadata:ai_provider:rubric'] = 'The grading rubric (if uploaded), sent to guide the AI evaluation.';
-$string['privacy:metadata:local_aigrade_feedback'] = 'AI feedback suggestions stored by the plugin (advisory only, not the official feedback).';
-$string['privacy:metadata:local_aigrade_feedback:userid'] = 'The ID of the student whose submission the suggestion belongs to.';
-$string['privacy:metadata:local_aigrade_feedback:feedback'] = 'The AI-generated feedback suggestion.';
-$string['privacy:metadata:local_aigrade_feedback:timecreated'] = 'Time the suggestion was created.';
-$string['privacy:metadata:local_aigrade_feedback:timemodified'] = 'Time the suggestion was last updated.';
+$string['privacy:metadata:local_assignmentaifeedback_feedback'] = 'AI feedback suggestions stored by the plugin (advisory only, not the official feedback).';
+$string['privacy:metadata:local_assignmentaifeedback_feedback:userid'] = 'The ID of the student whose submission the suggestion belongs to.';
+$string['privacy:metadata:local_assignmentaifeedback_feedback:feedback'] = 'The AI-generated feedback suggestion.';
+$string['privacy:metadata:local_assignmentaifeedback_feedback:timecreated'] = 'Time the suggestion was created.';
+$string['privacy:metadata:local_assignmentaifeedback_feedback:timemodified'] = 'Time the suggestion was last updated.';
 $string['privacy:aifeedbackpath'] = 'AI feedback suggestion';

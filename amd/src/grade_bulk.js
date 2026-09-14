@@ -16,7 +16,7 @@
 /**
  * AMD module for AI Grade bulk grading button
  *
- * @module     local_aigrade/grade_bulk
+ * @module     local_assignmentaifeedback/grade_bulk
  * @copyright  2025 Brian A. Pool, National Trail Local Schools
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -35,14 +35,14 @@ define(['jquery', 'core/notification'], function($, Notification) {
             strings = strings || {};
             var insertButton = function() {
                 // Don't insert if button already exists
-                if ($('.aigrade-button-injected').length > 0) {
+                if ($('.assignmentaifeedback-button-injected').length > 0) {
                     return true;
                 }
 
                 // Create the button
                 var button = $('<button>')
                     .attr('type', 'button')
-                    .addClass('btn btn-primary aigrade-button-injected')
+                    .addClass('btn btn-primary assignmentaifeedback-button-injected')
                     .text(buttonText)
                     .on('click', function() {
                         var btn = $(this);

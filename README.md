@@ -1,4 +1,4 @@
-# KI-Bewertungsassistenz (local_aigrade) – Hochschulanpassung
+# KI-Bewertungsassistenz (local_assignmentaifeedback) – Hochschulanpassung
 
 Moodle-Local-Plugin, das die **Bewertung schriftlicher Hochschularbeiten** (Exposés, Studien- und Seminararbeiten) durch Dozierende unterstützt. Die KI liefert eine **nicht bindende, kriterienbezogene Punkteempfehlung mit Begründung**. Sie vergibt **keine Note** – die finale Bewertung nehmen die Dozierenden vor.
 
@@ -27,15 +27,35 @@ Moodle-Local-Plugin, das die **Bewertung schriftlicher Hochschularbeiten** (Expo
 Zuerst `local_ai_manager` installieren (siehe dessen Dokumentation), danach dieses Plugin:
 
 ```bash
-git clone https://github.com/BLC-FHGR/moodle-ai-grader-fhgr /pfad/zu/moodle/local/aigrade
+git clone https://github.com/BLC-FHGR/moodle-local_assignmentaifeedback /pfad/zu/moodle/local/assignmentaifeedback
 ```
 
 Anschliessend **Website-Administration → Benachrichtigungen** aufrufen und das Upgrade
 ausführen. Alternativ als ZIP über **Website-Administration → Plugins → Plugins installieren**
-hochladen (Ordnername im ZIP muss `aigrade` lauten).
+hochladen (Ordnername im ZIP muss `assignmentaifeedback` lauten).
 
 **Wichtig:** Bei bestehenden Installationen **nur aktualisieren, nicht deinstallieren** –
 Deinstallieren löscht die Plugin-Datenbanktabellen (Konfiguration, gespeicherte Vorschläge).
+
+### Umstieg von `local_aigrade` (Versionen vor v3.0.0-fhgr)
+
+Das Plugin hiess bis und mit v2.6.0-fhgr `local_aigrade` und lag in `moodle/local/aigrade`.
+Mit der Umbenennung ist es für Moodle ein **neues Plugin** – die alten Tabellen werden nicht
+automatisch weiterverwendet. Der Umstieg läuft so:
+
+1. Verzeichnis umbenennen: `moodle/local/aigrade` → `moodle/local/assignmentaifeedback`
+   (bzw. das neue Repository an den neuen Pfad klonen und das alte Verzeichnis entfernen).
+2. **Website-Administration → Benachrichtigungen** aufrufen und das Upgrade ausführen.
+   `db/install.php` übernimmt dabei einmalig aus `local_aigrade`: Aufgaben-Konfiguration,
+   gespeicherte Vorschläge, Plugin-Einstellungen, hochgeladene Beurteilungsraster,
+   Capability-Overrides und noch eingereihte Hintergrund-Tasks.
+3. Das alte Plugin erscheint danach als **„Fehlt auf dem Datenträger"**. Erst **nachdem** die
+   Übernahme geprüft ist, unter **Website-Administration → Plugins → Plugin-Übersicht**
+   `local_aigrade` deinstallieren – das löscht die alten Tabellen `local_aigrade_config`
+   und `local_aigrade_feedback`.
+
+Die Übernahme überspringt Datensätze, die im Ziel bereits vorhanden sind, und kann ohne
+Doppeleinträge wiederholt werden.
 
 > **Hinweis zum `local_ai_manager`:** Die FHGR-Installation nutzt eine minimal gepatchte
 > Fassung, die **frei eingebbare Modellnamen** erlaubt (Upstream bietet nur ein Dropdown der
@@ -85,7 +105,7 @@ In der Abgabenübersicht **„Alle mit KI bewerten"**. Es werden nur Abgaben ver
 1. Die KI liest den eingereichten Text.
 2. Sie berücksichtigt Raster bzw. Aufgabenbeschreibung und die Dozierenden-Anweisungen.
 3. Sie erstellt eine begründete Punkteempfehlung samt Feedback.
-4. Der Vorschlag wird in `local_aigrade_feedback` gespeichert – **ohne** Note, **ohne** Eintrag im Kommentarfeld.
+4. Der Vorschlag wird in `local_assignmentaifeedback_feedback` gespeichert – **ohne** Note, **ohne** Eintrag im Kommentarfeld.
 5. Die Dozierenden prüfen, übernehmen bei Bedarf und entscheiden final.
 
 ## Datenschutz

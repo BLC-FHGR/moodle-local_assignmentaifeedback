@@ -17,12 +17,12 @@
 /**
  * Ad-hoc task: generate an AI feedback suggestion for a submission in the background.
  *
- * @package    local_aigrade
+ * @package    local_assignmentaifeedback
  * @copyright  2026 Anpassung Hochschulkontext FH Graubünden
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_aigrade\task;
+namespace local_assignmentaifeedback\task;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -35,7 +35,7 @@ class autograde_task extends \core\task\adhoc_task {
      * @return string
      */
     public function get_name() {
-        return get_string('task_autograde', 'local_aigrade');
+        return get_string('task_autograde', 'local_assignmentaifeedback');
     }
 
     /**
@@ -97,7 +97,7 @@ class autograde_task extends \core\task\adhoc_task {
 
         $manual = !empty($data->manual);
 
-        $config = $DB->get_record('local_aigrade_config', ['assignmentid' => $cm->instance]);
+        $config = $DB->get_record('local_assignmentaifeedback_config', ['assignmentid' => $cm->instance]);
         if (!$config || empty($config->enabled)) {
             return;
         }
@@ -113,7 +113,7 @@ class autograde_task extends \core\task\adhoc_task {
         // the person who asked for the grading.
         $graderuser = self::resolve_grader_user($context, (int) ($data->graderid ?? 0));
         if (!$graderuser) {
-            mtrace('local_aigrade autograde: no valid grading account configured/found - skipped.');
+            mtrace('local_assignmentaifeedback autograde: no valid grading account configured/found - skipped.');
             return;
         }
 
@@ -124,33 +124,33 @@ class autograde_task extends \core\task\adhoc_task {
         // local_ai_manager timeout is dimensioned for interactive requests and
         // aborts long rubric prompts ("The API took too long to process your
         // request"). Raise it for this task only.
-        $restoretimeout = \local_aigrade\local\request_timeout::for_background();
+        $restoretimeout = \local_assignmentaifeedback\local\request_timeout::for_background();
 
         try {
             $assignment = new \assign($context, $cm, $course);
-            $grader = new \local_aigrade\grader($assignment, $context, $config);
+            $grader = new \local_assignmentaifeedback\grader($assignment, $context, $config);
             $result = $grader->grade_single_submission($data->userid, !empty($data->forceregrade));
 
             if (empty($result['success'])) {
                 $err = !empty($result['error']) ? $result['error'] : 'unknown error';
 
                 if (!empty($result['already_graded'])) {
-                    mtrace('local_aigrade autograde: userid=' . $data->userid . ' already has feedback - skipped.');
+                    mtrace('local_assignmentaifeedback autograde: userid=' . $data->userid . ' already has feedback - skipped.');
                 } else if (!empty($result['retryable'])) {
                     // The AI service failed (timeout, gateway error, quota). Throwing
                     // makes Moodle mark the task as failed and retry it with its usual
                     // backoff, instead of silently dropping the submission: previously
                     // the task completed successfully here and the queued entry was
                     // deleted, so the suggestion was lost for good.
-                    mtrace('local_aigrade autograde: userid=' . $data->userid
+                    mtrace('local_assignmentaifeedback autograde: userid=' . $data->userid
                         . ' failed, will be retried - ' . $err);
-                    throw new \moodle_exception('error_autograde_failed', 'local_aigrade', '', $err);
+                    throw new \moodle_exception('error_autograde_failed', 'local_assignmentaifeedback', '', $err);
                 } else {
                     // Nothing to retry (e.g. the submission carries no readable text).
-                    mtrace('local_aigrade autograde: userid=' . $data->userid . ' failed - ' . $err);
+                    mtrace('local_assignmentaifeedback autograde: userid=' . $data->userid . ' failed - ' . $err);
                 }
             } else {
-                mtrace('local_aigrade autograde: userid=' . $data->userid . ' done.');
+                mtrace('local_assignmentaifeedback autograde: userid=' . $data->userid . ' done.');
             }
         } finally {
             $restoretimeout();
@@ -185,7 +185,7 @@ class autograde_task extends \core\task\adhoc_task {
         if ($graderid > 0) {
             $user = \core_user::get_user($graderid, '*', IGNORE_MISSING);
             if ($user && $user->confirmed && empty($user->deleted) && empty($user->suspended)
-                    && has_capability('local/aigrade:grade', $context, $user)) {
+                    && has_capability('local/assignmentaifeedback:grade', $context, $user)) {
                 return $user;
             }
             // Named but no longer usable: do not silently grade as someone else.
@@ -193,7 +193,7 @@ class autograde_task extends \core\task\adhoc_task {
         }
 
         // 1) Configured service account (username).
-        $username = trim((string) get_config('local_aigrade', 'autograde_user'));
+        $username = trim((string) get_config('local_assignmentaifeedback', 'autograde_user'));
         if ($username !== '') {
             $user = \core_user::get_user_by_username($username, '*', null, IGNORE_MISSING);
             if ($user && $user->confirmed && empty($user->deleted) && empty($user->suspended)) {
@@ -204,7 +204,7 @@ class autograde_task extends \core\task\adhoc_task {
         }
 
         // 2) Fallback: an enrolled user with the grading capability in this context.
-        $users = get_enrolled_users($context, 'local/aigrade:grade', 0, 'u.*', null, 0, 1);
+        $users = get_enrolled_users($context, 'local/assignmentaifeedback:grade', 0, 'u.*', null, 0, 1);
         if (!empty($users)) {
             return reset($users);
         }

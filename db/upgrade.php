@@ -15,207 +15,32 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Upgrade script for local_aigrade
+ * Upgrade script for local_assignmentaifeedback
  *
- * @package    local_aigrade
+ * @package    local_assignmentaifeedback
  * @copyright  2026 Brian A. Pool, National Trail Local Schools
+ * @copyright  2026 Anpassung Hochschulkontext FH Graubünden
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Upgrade the plugin
+ * Upgrade the plugin.
+ *
+ * This component was renamed from local_aigrade in v3.0.0-fhgr. Every install of
+ * local_assignmentaifeedback therefore starts from db/install.xml at the current
+ * schema, and the upgrade steps that local_aigrade accumulated between 2025012001
+ * and 2026090100 can never run here. They were not carried over: keeping them would
+ * describe changes to tables that never existed under this component name. The
+ * history remains in git and in the final local_aigrade release.
+ *
+ * Data from an existing local_aigrade installation is migrated once, on install,
+ * by db/install.php.
  *
  * @param int $oldversion
  * @return bool
  */
-function xmldb_local_aigrade_upgrade($oldversion) {
-    global $DB;
-    $dbman = $DB->get_manager();
-
-    if ($oldversion < 2025012001) {
-        // Define table local_aigrade_config to be created.
-        $table = new xmldb_table('local_aigrade_config');
-
-        // Adding fields to table local_aigrade_config.
-        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
-        $table->add_field('assignmentid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('enabled', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0');
-        $table->add_field('instructions', XMLDB_TYPE_TEXT, null, null, null, null, null);
-        $table->add_field('rubricfile', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
-        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-
-        // Adding keys to table local_aigrade_config.
-        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
-        $table->add_key('assignmentid', XMLDB_KEY_FOREIGN, ['assignmentid'], 'assign', ['id']);
-
-        // Adding indexes to table local_aigrade_config.
-        $table->add_index('assignmentid_idx', XMLDB_INDEX_NOTUNIQUE, ['assignmentid']);
-
-        // Conditionally launch create table for local_aigrade_config.
-        if (!$dbman->table_exists($table)) {
-            $dbman->create_table($table);
-        }
-
-        // Aigrade savepoint reached.
-        upgrade_plugin_savepoint(true, 2025012001, 'local', 'aigrade');
-    }
-
-    if ($oldversion < 2025012003) {
-        // Define fields to be added to local_aigrade_config.
-        $table = new xmldb_table('local_aigrade_config');
-        
-        // Add instructions_with_rubric field
-        $field = new xmldb_field('instructions_with_rubric', XMLDB_TYPE_TEXT, null, null, null, null, null, 'instructions');
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-        
-        // Add instructions_without_rubric field
-        $field = new xmldb_field('instructions_without_rubric', XMLDB_TYPE_TEXT, null, null, null, null, null, 'instructions_with_rubric');
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-        
-        // Migrate existing instructions to instructions_with_rubric
-        $DB->execute("UPDATE {local_aigrade_config} 
-                     SET instructions_with_rubric = instructions 
-                     WHERE instructions IS NOT NULL AND instructions != '' 
-                     AND (instructions_with_rubric IS NULL OR instructions_with_rubric = '')");
-
-        // Aigrade savepoint reached.
-        upgrade_plugin_savepoint(true, 2025012003, 'local', 'aigrade');
-    }
-
-    if ($oldversion < 2025012004) {
-        // Add grade_level field to local_aigrade_config
-        $table = new xmldb_table('local_aigrade_config');
-        
-        $field = new xmldb_field('grade_level', XMLDB_TYPE_CHAR, '10', null, null, null, '9', 'instructions_without_rubric');
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Aigrade savepoint reached.
-        upgrade_plugin_savepoint(true, 2025012004, 'local', 'aigrade');
-    }
-
-    if ($oldversion < 2025012005) {
-        // Add AI name setting with default value
-        $ai_name = get_config('local_aigrade', 'ai_name');
-        if ($ai_name === false) {
-            set_config('ai_name', 'AI', 'local_aigrade');
-        }
-
-        // Aigrade savepoint reached.
-        upgrade_plugin_savepoint(true, 2025012005, 'local', 'aigrade');
-    }
-
-    if ($oldversion < 2026031100) {
-        // Add grading_strictness field to local_aigrade_config.
-        // This step was previously at 2026012000 but the column was inadvertently omitted from
-        // install.xml, so some existing installs may never have received this field. Bumping the
-        // version ensures the field is added on all existing installations. The field_exists check
-        // below makes this safe to run even if the column is already present.
-        $table = new xmldb_table('local_aigrade_config');
-
-        // Field: grading_strictness - allows teachers to override grade-level strictness.
-        // Default 'standard' means use the grade-level appropriate strictness.
-        $field = new xmldb_field('grading_strictness', XMLDB_TYPE_CHAR, '20', null, null, null, 'standard', 'grade_level');
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Aigrade savepoint reached.
-        upgrade_plugin_savepoint(true, 2026031100, 'local', 'aigrade');
-    }
-
-    if ($oldversion < 2026082000) {
-        // Higher-education adaptation: remove the US K-12 specific fields.
-        // Grading behaviour is now driven entirely by the instruction fields
-        // and the uploaded rubric, so grade_level and grading_strictness are
-        // no longer used.
-        $table = new xmldb_table('local_aigrade_config');
-
-        $field = new xmldb_field('grade_level');
-        if ($dbman->field_exists($table, $field)) {
-            $dbman->drop_field($table, $field);
-        }
-
-        $field = new xmldb_field('grading_strictness');
-        if ($dbman->field_exists($table, $field)) {
-            $dbman->drop_field($table, $field);
-        }
-
-        // Aigrade savepoint reached.
-        upgrade_plugin_savepoint(true, 2026082000, 'local', 'aigrade');
-    }
-
-    if ($oldversion < 2026082004) {
-        // New table storing AI feedback suggestions separately from Moodle's
-        // official feedback field (advisory only). See classes/grader.php.
-        $table = new xmldb_table('local_aigrade_feedback');
-
-        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
-        $table->add_field('assignmentid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('feedback', XMLDB_TYPE_TEXT, null, null, null, null, null);
-        $table->add_field('model', XMLDB_TYPE_CHAR, '255', null, null, null, null);
-        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-
-        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
-        $table->add_key('assignmentid', XMLDB_KEY_FOREIGN, ['assignmentid'], 'assign', ['id']);
-        $table->add_key('userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
-        $table->add_index('assignmentuser', XMLDB_INDEX_UNIQUE, ['assignmentid', 'userid']);
-
-        if (!$dbman->table_exists($table)) {
-            $dbman->create_table($table);
-        }
-
-        // Aigrade savepoint reached.
-        upgrade_plugin_savepoint(true, 2026082004, 'local', 'aigrade');
-    }
-
-    if ($oldversion < 2026082007) {
-        // Add auto_grade flag (automatically grade on submission).
-        $table = new xmldb_table('local_aigrade_config');
-        $field = new xmldb_field('auto_grade', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'enabled');
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
-
-        // Aigrade savepoint reached.
-        upgrade_plugin_savepoint(true, 2026082007, 'local', 'aigrade');
-    }
-
-    if ($oldversion < 2026083102) {
-        // New setting: timeout for interactive (manual) AI requests. Seed the
-        // default so existing sites get the raised limit without having to open
-        // the settings page. See classes/local/request_timeout.php.
-        // Historical step, kept for sites upgrading through this version. The
-        // setting it seeds is removed again in 2026090100, once all AI requests
-        // moved into the grading task.
-        if (get_config('local_aigrade', 'manual_timeout') === false) {
-            set_config('manual_timeout', 240, 'local_aigrade');
-        }
-
-        // Aigrade savepoint reached.
-        upgrade_plugin_savepoint(true, 2026083102, 'local', 'aigrade');
-    }
-
-    if ($oldversion < 2026090100) {
-        // The grading buttons no longer perform the AI request in the web request,
-        // so the interactive timeout setting introduced in 2026083102 has nothing
-        // left to govern. All AI requests run in the ad-hoc task and use
-        // 'autograde_timeout'.
-        unset_config('manual_timeout', 'local_aigrade');
-
-        // Aigrade savepoint reached.
-        upgrade_plugin_savepoint(true, 2026090100, 'local', 'aigrade');
-    }
-
+function xmldb_local_assignmentaifeedback_upgrade($oldversion) {
     return true;
 }

@@ -17,12 +17,12 @@
 /**
  * Form hook to properly load rubric files
  *
- * @package    local_aigrade
+ * @package    local_assignmentaifeedback
  * @copyright  2025 Brian A. Pool, National Trail Local Schools
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_aigrade\form;
+namespace local_assignmentaifeedback\form;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -36,12 +36,12 @@ class mod_form_hook {
      * @return int draft item id
      */
     public static function prepare_rubric_draft_area($assignmentid, $contextid) {
-        $draftitemid = file_get_submitted_draft_itemid('aigrade_rubric');
+        $draftitemid = file_get_submitted_draft_itemid('assignmentaifeedback_rubric');
         
         file_prepare_draft_area(
             $draftitemid,
             $contextid,
-            'local_aigrade',
+            'local_assignmentaifeedback',
             'rubric',
             $assignmentid,
             array('subdirs' => 0, 'maxfiles' => 1, 'maxbytes' => 10485760)

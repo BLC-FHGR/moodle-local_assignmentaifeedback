@@ -17,7 +17,7 @@
 /**
  * AJAX endpoint: return the stored AI feedback suggestion for a submission.
  *
- * @package    local_aigrade
+ * @package    local_assignmentaifeedback
  * @copyright  2026 Anpassung Hochschulkontext FH Graubünden
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -36,11 +36,11 @@ $context = context_module::instance($cm->id);
 
 require_login($course, true, $cm);
 require_sesskey();
-require_capability('local/aigrade:grade', $context);
+require_capability('local/assignmentaifeedback:grade', $context);
 
 $assignment = new assign($context, $cm, $course);
 
-$record = \local_aigrade\grader::get_stored_feedback_record($assignment->get_instance()->id, $userid);
+$record = \local_assignmentaifeedback\grader::get_stored_feedback_record($assignment->get_instance()->id, $userid);
 
 echo json_encode([
     'success'      => true,

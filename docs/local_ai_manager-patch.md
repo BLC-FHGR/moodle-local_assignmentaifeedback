@@ -3,7 +3,7 @@
 > **Hinweis:** `local_ai_manager` ist **nicht Teil dieses Repositories** – es wird separat
 > installiert (<https://github.com/bycs-lp/moodle-local_ai_manager>). Dieses Dokument hält
 > fest, welche minimale Anpassung die FHGR-Installation an jenem Plugin vorgenommen hat und
-> warum. Ohne den Patch funktioniert `local_aigrade` weiterhin, es lassen sich dann aber nur
+> warum. Ohne den Patch funktioniert `local_assignmentaifeedback` weiterhin, es lassen sich dann aber nur
 > die im jeweiligen Connector fest einprogrammierten Modelle auswählen (Dropdown statt
 > freiem Modellnamen).
 
