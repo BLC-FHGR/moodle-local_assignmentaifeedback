@@ -28,7 +28,7 @@ defined('MOODLE_INTERNAL') || die();
 $plugin->component = 'local_assignmentaifeedback';
 $plugin->version = 2026092800;  // YYYYMMDDXX format (2026-09-28, version 00)
 $plugin->requires = 2024042200;  // Moodle 4.5
-$plugin->maturity = MATURITY_BETA;
+$plugin->maturity = MATURITY_STABLE;
 $plugin->release = 'v3.1.0-fhgr';
 
 // The grading requests are routed through local_ai_manager (https://github.com/bycs-lp/moodle-local_ai_manager),
