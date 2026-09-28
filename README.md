@@ -82,9 +82,30 @@ In den globalen Einstellungen lässt sich das Backend wählen:
 
 Beachten Sie die Datenschutzvorgaben Ihrer Hochschule (siehe unten).
 
+### Rechte (Capabilities)
+
+| Capability | Erlaubt | Standard |
+| --- | --- | --- |
+| `local/assignmentaifeedback:grade` | Die KI auf einer Aufgabe **nutzen**: Bewertungs-Schaltflächen, Vorschlags-Panel, automatische Bewertung bei Abgabe | Dozent/in, Dozent/in ohne Bearbeitungsrecht, Manager/in |
+| `local/assignmentaifeedback:configure` | Die KI für eine Aufgabe **aktivieren** und deren Einstellungen bearbeiten (Prompts, Beurteilungsraster, automatische Bewertung) | nur Manager/in |
+
+Die Trennung ist gewollt: Wer die Einstellungen bearbeitet, entscheidet, welche Abgaben mit
+welchem Prompt an den KI-Anbieter gehen. Ohne `:configure` erscheint der Abschnitt
+**KI-Bewertung** im Aufgaben-Formular gar nicht; eine bereits gespeicherte Konfiguration
+bleibt beim Speichern der Aufgabe unverändert erhalten.
+
+**Freigabe für einen Kursbereich** (statt site-weit): *Kursbereich → Rechte ändern* →
+`local/assignmentaifeedback:configure` für die gewünschte Rolle **erlauben**. Das gilt
+dann für alle Kurse und Unterbereiche darunter. Soll auch das blosse Nutzen auf den
+Bereich beschränkt sein, zusätzlich `local/assignmentaifeedback:grade` unter
+*Website-Administration → Nutzer/innen → Rechte → Rollen verwalten* aus den
+Dozierenden-Rollen entfernen und im Kursbereich gezielt erlauben.
+
 ## Verwendung
 
 ### Aktivieren pro Aufgabe
+> Benötigt `local/assignmentaifeedback:configure`.
+
 1. Aufgabe erstellen/bearbeiten → Abschnitt **KI-Bewertung**
 2. **KI-Bewertung** aktivieren
 3. Optional **„Automatisch bei Abgabe bewerten"** aktivieren (läuft im Cron)

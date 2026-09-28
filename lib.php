@@ -34,12 +34,20 @@ function local_assignmentaifeedback_coursemodule_standard_elements($formwrapper,
     global $DB, $PAGE;
     
     $current = $formwrapper->get_current();
-    
+
     // Only for assignment module
     if (!isset($current->modulename) || $current->modulename !== 'assign') {
         return;
     }
-    
+
+    // Editing the AI settings needs its own capability: being allowed to grade with the AI
+    // does not imply being allowed to switch it on or to rewrite the prompt. get_context()
+    // is the course context while the assignment is being created and the module context
+    // afterwards; the capability is inherited down from category and course either way.
+    if (!has_capability('local/assignmentaifeedback:configure', $formwrapper->get_context())) {
+        return;
+    }
+
     // Get existing config if editing
     $update = optional_param('update', 0, PARAM_INT);
     $aiconfig = null;
@@ -149,7 +157,12 @@ function local_assignmentaifeedback_coursemodule_definition_after_data($formwrap
     
     $assignmentid = $current->instance;
     $context = \context_module::instance($current->coursemodule);
-    
+
+    // The rubric filemanager only exists when the section above was rendered.
+    if (!has_capability('local/assignmentaifeedback:configure', $context)) {
+        return;
+    }
+
     // Prepare the draft area
     $draftitemid = file_get_submitted_draft_itemid('assignmentaifeedback_rubric');
     
@@ -191,7 +204,19 @@ function local_assignmentaifeedback_coursemodule_edit_post_actions($data, $cours
     }
     
     $assignmentid = $data->instance;
-    
+
+    // Without the capability the form section was never rendered, so none of the fields
+    // below were submitted. Writing the record anyway would store enabled = 0 and empty
+    // prompts -- every save of the assignment form by a teacher who may not configure the
+    // AI would silently switch it off and discard the instructions. Leave the stored
+    // configuration untouched instead.
+    $context = !empty($data->coursemodule)
+        ? context_module::instance($data->coursemodule)
+        : context_course::instance($course->id);
+    if (!has_capability('local/assignmentaifeedback:configure', $context)) {
+        return $data;
+    }
+
     // Check if config exists
     $config = $DB->get_record('local_assignmentaifeedback_config', ['assignmentid' => $assignmentid]);
     
@@ -227,7 +252,6 @@ function local_assignmentaifeedback_coursemodule_edit_post_actions($data, $cours
     
     // Handle file upload
     if (isset($data->assignmentaifeedback_rubric)) {
-        $context = context_module::instance($data->coursemodule);
         file_save_draft_area_files(
             $data->assignmentaifeedback_rubric,
             $context->id,

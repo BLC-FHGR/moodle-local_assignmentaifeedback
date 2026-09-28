@@ -25,6 +25,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 $capabilities = [
+    // Use the AI on an assignment that already has it switched on: the grading buttons,
+    // the feedback panel and the automatic grading on submission.
     'local/assignmentaifeedback:grade' => [
         'riskbitmask' => RISK_SPAM,
         'captype' => 'write',
@@ -32,6 +34,23 @@ $capabilities = [
         'archetypes' => [
             'editingteacher' => CAP_ALLOW,
             'teacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW,
+        ],
+    ],
+
+    // Switch the AI on for an assignment and edit its settings: the "KI-Bewertung" section
+    // in the assignment form (enable, automatic grading, both prompts, the rubric file).
+    //
+    // Deliberately NOT granted to the teacher archetypes. Whoever edits these settings
+    // decides which submissions are sent to the AI provider and under which prompt, so
+    // this is a rollout decision rather than a teaching one. Grant it where the plugin has
+    // been approved -- typically per course category, see README -- or, to hand it to
+    // every editing teacher site-wide, add 'editingteacher' => CAP_ALLOW below.
+    'local/assignmentaifeedback:configure' => [
+        'riskbitmask' => RISK_CONFIG | RISK_SPAM,
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_MODULE,
+        'archetypes' => [
             'manager' => CAP_ALLOW,
         ],
     ],

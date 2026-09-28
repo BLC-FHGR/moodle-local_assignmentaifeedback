@@ -30,8 +30,9 @@ $string['pluginname'] = 'AI grading assistant';
 $string['assignmentaifeedback'] = 'AI grading';
 $string['assignmentaifeedback_help'] = 'Enables AI-assisted grading support for this assignment. The AI provides a non-binding point recommendation and written feedback; teachers make the final grading decision.';
 
-// Capability.
+// Capabilities.
 $string['assignmentaifeedback:grade'] = 'Use AI to support grading of submissions';
+$string['assignmentaifeedback:configure'] = 'Enable AI grading for an assignment and edit its settings';
 
 // Warning in the assignment form.
 $string['assignmentaifeedback_warning'] = 'AI grading notice';

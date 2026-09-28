@@ -29,8 +29,9 @@ $string['pluginname'] = 'KI-Bewertungsassistenz';
 $string['assignmentaifeedback'] = 'KI-Bewertung';
 $string['assignmentaifeedback_help'] = 'Aktiviert die KI-gestützte Bewertungsunterstützung für diese Aufgabe. Die KI liefert eine nicht bindende Punkteempfehlung und ein schriftliches Feedback; die finale Bewertung nehmen die Dozierenden vor.';
 
-// Capability.
+// Capabilities.
 $string['assignmentaifeedback:grade'] = 'KI zur Unterstützung der Bewertung von Abgaben verwenden';
+$string['assignmentaifeedback:configure'] = 'KI-Bewertung für eine Aufgabe aktivieren und deren Einstellungen bearbeiten';
 
 // Warnhinweis im Aufgaben-Formular.
 $string['assignmentaifeedback_warning'] = 'Hinweis zur KI-Bewertung';

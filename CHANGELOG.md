@@ -3,6 +3,26 @@
 Änderungen an der FHGR-Fassung von `local_assignmentaifeedback` (bis v2.6.0-fhgr:
 `local_aigrade`). Einträge vor v3.0.0-fhgr nennen weiterhin die damaligen Namen.
 
+## v3.1.0-fhgr — 2026-09-28
+**Neue Capability `local/assignmentaifeedback:configure`.** Die KI-Einstellungen einer
+Aufgabe (Aktivieren, automatische Bewertung, beide Prompts, Beurteilungsraster) sind jetzt
+von der Nutzung getrennt: `:grade` bleibt wie bisher bei Dozierenden, `:configure` ist
+standardmässig **nur** Manager/innen erlaubt und wird dort vergeben, wo das Plugin
+freigegeben ist – z. B. pro Kursbereich.
+- Der Abschnitt „KI-Bewertung" im Aufgaben-Formular war bisher **ungeschützt**: Er wurde
+  allen Personen angezeigt, die eine Aufgabe bearbeiten dürfen, unabhängig von `:grade`.
+  `local_assignmentaifeedback_coursemodule_standard_elements()` und
+  `..._definition_after_data()` prüfen jetzt `:configure`.
+- **Wichtig für den Speicherpfad:** `..._coursemodule_edit_post_actions()` hat den
+  Konfigurationsdatensatz bedingungslos geschrieben. Ohne den Formularabschnitt werden
+  dessen Felder nicht mitgeschickt – jedes Speichern des Aufgaben-Formulars durch eine
+  Person ohne `:configure` hätte die KI stillschweigend deaktiviert (`enabled = 0`) und
+  die Anweisungen gelöscht. Die Funktion bricht nun vor jedem Schreibzugriff ab und lässt
+  die gespeicherte Konfiguration unberührt.
+- Vergabe pro Kursbereich: *Kursbereich → Rechte ändern* →
+  `local/assignmentaifeedback:configure` für die gewünschte Rolle erlauben. Die Vererbung
+  gilt für alle Kurse und Unterbereiche.
+
 ## v3.0.0-fhgr — 2026-09-14
 **Umbenennung:** Das Plugin heisst neu `local_assignmentaifeedback` und liegt in
 `moodle/local/assignmentaifeedback` (vormals `local_aigrade` in `moodle/local/aigrade`).
