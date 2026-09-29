@@ -3,6 +3,18 @@
 Änderungen an der FHGR-Fassung von `local_assignmentaifeedback` (bis v2.6.0-fhgr:
 `local_aigrade`). Einträge vor v3.0.0-fhgr nennen weiterhin die damaligen Namen.
 
+## v3.1.1-fhgr — 2026-09-29
+**Keine manuellen Schaltflächen mehr, wenn „Automatisch bei Abgabe bewerten" aktiv ist.**
+Der Observer reiht dann jede Abgabe selbst ein; beide Schaltflächen überspringen Abgaben,
+für die bereits ein Vorschlag vorliegt, und hätten damit nichts mehr auszulösen.
+- Sammelbewertung: Das AMD-Modul wird gar nicht mehr geladen, es fügt ausschliesslich die
+  Schaltfläche ein.
+- Einzelbewertung: Das Modul wird weiterhin geladen, `init()` erhält neu den Parameter
+  `showButton`. Das **Vorschlags-Panel muss bleiben** – es zeigt das Ergebnis des
+  automatischen Laufs und enthält „Ins Feedback-Feld übernehmen"; nur die Schaltfläche
+  entfällt.
+- Ausserdem: Maturity von `MATURITY_BETA` auf `MATURITY_STABLE`.
+
 ## v3.1.0-fhgr — 2026-09-28
 **Neue Capability `local/assignmentaifeedback:configure`.** Die KI-Einstellungen einer
 Aufgabe (Aktivieren, automatische Bewertung, beide Prompts, Beurteilungsraster) sind jetzt

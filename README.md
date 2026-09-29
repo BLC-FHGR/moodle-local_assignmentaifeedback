@@ -113,6 +113,11 @@ Dozierenden-Rollen entfernen und im Kursbereich gezielt erlauben.
 5. Optional ein Beurteilungsraster hochladen
 6. Speichern
 
+> Mit **„Automatisch bei Abgabe bewerten"** entfallen beide manuellen Schaltflächen: Jede
+> Abgabe wird ohnehin eingereiht, die Schaltflächen hätten nichts mehr auszulösen. Das
+> Vorschlags-Panel in der Einzelansicht bleibt – dort erscheint das Ergebnis des
+> automatischen Laufs.
+
 ### Einzelbewertung
 Abgabe öffnen → Schaltfläche **„Mit KI bewerten"**. Der Vorschlag erscheint im Panel rechts.
 Mit **„Ins Feedback-Feld übernehmen"** lässt er sich in Moodles Feedback-Editor übertragen;

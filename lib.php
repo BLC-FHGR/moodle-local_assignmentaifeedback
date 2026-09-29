@@ -292,7 +292,15 @@ function local_assignmentaifeedback_before_footer() {
     if (!$config || !$config->enabled) {
         return '';
     }
-    
+
+    // With automatic grading on submission the event observer queues every run, so neither
+    // manual button has anything left to trigger: both skip submissions that already carry a
+    // suggestion, and pressing them would at best queue a duplicate run for the few the
+    // observer has not reached yet. Both buttons are therefore hidden -- but only the
+    // buttons: the side panel on the single grading page is what displays the suggestion the
+    // automatic run produced, so that page keeps loading its module with the button off.
+    $autograde = !empty($config->auto_grade);
+
     // Check capability
     $context = context_module::instance($cm->id);
     if (!has_capability('local/assignmentaifeedback:grade', $context)) {
@@ -342,9 +350,15 @@ function local_assignmentaifeedback_before_footer() {
             $button_text,
             $sesskey,
             $strings,
-            $feedbackurl->out(false)
+            $feedbackurl->out(false),
+            !$autograde
         ]);
     } else {
+        // The bulk module only ever adds the button, so there is nothing left to load.
+        if ($autograde) {
+            return '';
+        }
+
         $url = new moodle_url('/local/assignmentaifeedback/grade.php', ['id' => $cm->id]);
         $button_text = get_string('button_grade_bulk', 'local_assignmentaifeedback', $ai_name);
 

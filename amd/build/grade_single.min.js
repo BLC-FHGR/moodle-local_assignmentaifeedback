@@ -35,10 +35,14 @@ define(['jquery'], function($) {
          * @param {string} sesskey     Session key
          * @param {Object} strings     Localised UI strings
          * @param {string} feedbackUrl AJAX URL to fetch stored feedback
+         * @param {boolean} showButton Whether to offer the manual grading button. False when
+         *                             the assignment grades automatically on submission; the
+         *                             panel below is still shown, it displays the result.
          */
-        init: function(buttonUrl, buttonText, sesskey, strings, feedbackUrl) {
+        init: function(buttonUrl, buttonText, sesskey, strings, feedbackUrl, showButton) {
 
             strings = strings || {};
+            showButton = (showButton !== false);
 
             // The feedback currently shown in the panel (for the "apply" button).
             var currentFeedbackHtml = '';
@@ -343,6 +347,12 @@ define(['jquery'], function($) {
             };
 
             var insertButton = function() {
+                // Nothing to insert when the assignment grades automatically on submission.
+                // Reported as "done" so the retry interval below stops straight away.
+                if (!showButton) {
+                    return true;
+                }
+
                 if ($('.assignmentaifeedback-single-button').length > 0) {
                     return true;
                 }
