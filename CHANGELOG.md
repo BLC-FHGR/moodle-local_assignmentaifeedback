@@ -3,6 +3,24 @@
 Änderungen an der FHGR-Fassung von `local_assignmentaifeedback` (bis v2.6.0-fhgr:
 `local_aigrade`). Einträge vor v3.0.0-fhgr nennen weiterhin die damaligen Namen.
 
+## v3.2.0-fhgr — 2026-10-29
+**Das KI-Feedback-Panel lässt sich verschieben und in der Grösse ändern.** Bisher war es
+fest am rechten Rand angedockt und konnte nur ein- und ausgeklappt werden – es lag damit
+oft über dem Teil der Bewertungsansicht, den man gerade lesen wollte.
+- **Verschieben:** an der Kopfleiste ziehen (Maus, Touch, Stift). Der Ein-/Ausklapp-Button
+  in der Kopfleiste löst kein Ziehen aus.
+- **Grösse ändern:** am Griff unten rechts. Der Inhalt scrollt im Panel.
+- **Bleibt im Fenster:** Das Panel lässt sich nicht aus dem sichtbaren Bereich schieben, und
+  nach einer Verkleinerung des Browserfensters rückt es wieder hinein. Kopfleiste und
+  Grössen-Griff bleiben dadurch immer erreichbar.
+- **Wird gemerkt:** Position und Grösse werden pro Browser in `localStorage` gespeichert
+  und gelten beim Wechsel zur nächsten Abgabe und nach dem Neuladen. Ohne verfügbaren
+  Speicher (z. B. blockiert) funktioniert das Panel normal, nur ohne Merken.
+- **Zurücksetzen:** Doppelklick auf die Kopfleiste dockt das Panel wieder rechts oben an
+  und stellt die Standardgrösse her. Ein Tooltip auf der Kopfleiste weist darauf hin.
+- Neuer Sprach-String `js_panel_move` (de/en). Rein clientseitig: `amd/src|build/grade_single.js`,
+  `styles.css`, `lib.php`.
+
 ## v3.1.1-fhgr — 2026-09-29
 **Keine manuellen Schaltflächen mehr, wenn „Automatisch bei Abgabe bewerten" aktiv ist.**
 Der Observer reiht dann jede Abgabe selbst ein; beide Schaltflächen überspringen Abgaben,

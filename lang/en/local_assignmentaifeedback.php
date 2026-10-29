@@ -142,6 +142,7 @@ $string['js_error_server'] = 'Error communicating with the server: ';
 $string['js_panel_title'] = '{$a} feedback';
 $string['js_panel_jump'] = 'Go to feedback field';
 $string['js_panel_collapse'] = 'Collapse/expand';
+$string['js_panel_move'] = 'Drag to move, double-click to reset position and size';
 $string['js_panel_apply'] = 'Copy to feedback field';
 $string['js_panel_apply_confirm'] = 'The feedback field already contains text. Overwrite it with the AI feedback?';
 $string['js_panel_apply_failed'] = 'The feedback field could not be found. Please copy the text manually.';

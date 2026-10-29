@@ -177,6 +177,139 @@ define(['jquery'], function($) {
                 jumpToFeedbackField();
             };
 
+            // Panel position and size chosen by the user, kept per browser across
+            // submissions and page loads. Null while the panel is docked on the right.
+            var LAYOUT_KEY = 'local_assignmentaifeedback_panel_layout';
+
+            var loadLayout = function() {
+                try {
+                    var layout = JSON.parse(window.localStorage.getItem(LAYOUT_KEY));
+                    return (layout && typeof layout.left === 'number' && typeof layout.top === 'number') ? layout : null;
+                } catch (e) {
+                    return null;
+                }
+            };
+
+            var saveLayout = function(layout) {
+                try {
+                    if (layout) {
+                        window.localStorage.setItem(LAYOUT_KEY, JSON.stringify(layout));
+                    } else {
+                        window.localStorage.removeItem(LAYOUT_KEY);
+                    }
+                } catch (e) {
+                    // Storage unavailable (private mode, blocked): position is just not remembered.
+                }
+            };
+
+            // Keep the whole panel on screen, so the header and the resize handle stay
+            // reachable. Its height is capped by max-height, so it always fits.
+            var moveTo = function(panel, left, top) {
+                var rect = panel.getBoundingClientRect();
+                // clientWidth/Height exclude the scrollbars, unlike window.innerWidth/Height.
+                var viewport = document.documentElement;
+                left = Math.max(0, Math.min(left, viewport.clientWidth - rect.width));
+                top = Math.max(0, Math.min(top, viewport.clientHeight - rect.height));
+                panel.style.left = left + 'px';
+                panel.style.top = top + 'px';
+            };
+
+            // Place the panel: at the stored position (kept inside the viewport) or,
+            // without one, docked to the right edge at the top defined in styles.css.
+            var placePanel = function(panel) {
+                if (panel.style.display === 'none') {
+                    return;
+                }
+                var layout = loadLayout();
+                // Set the border style first, it changes the width that is measured below.
+                panel.classList.toggle('assignmentaifeedback-floating', !!layout);
+                if (layout) {
+                    moveTo(panel, layout.left, layout.top);
+                    return;
+                }
+                // Measure from the left edge, so a collapsed (auto width) panel is not
+                // squeezed by its previous position.
+                panel.style.left = '0px';
+                panel.style.top = '';
+                var top = parseFloat(window.getComputedStyle(panel).top) || 0;
+                moveTo(panel, document.documentElement.clientWidth - panel.getBoundingClientRect().width, top);
+            };
+
+            var rememberLayout = function(panel) {
+                var rect = panel.getBoundingClientRect();
+                var layout = {left: rect.left, top: rect.top};
+                if (panel.style.width) {
+                    layout.width = panel.style.width;
+                }
+                if (panel.style.height) {
+                    layout.height = panel.style.height;
+                }
+                saveLayout(layout);
+                panel.classList.add('assignmentaifeedback-floating');
+            };
+
+            // Drag the panel by its header bar; double-click resets it to the docked default.
+            var makeMovable = function(panel, header) {
+                var drag = null;
+
+                header.addEventListener('pointerdown', function(e) {
+                    if (e.button !== 0 || e.target.closest('button')) {
+                        return;
+                    }
+                    var rect = panel.getBoundingClientRect();
+                    drag = {dx: e.clientX - rect.left, dy: e.clientY - rect.top, moved: false};
+                    header.setPointerCapture(e.pointerId);
+                    e.preventDefault();
+                });
+
+                header.addEventListener('pointermove', function(e) {
+                    if (!drag) {
+                        return;
+                    }
+                    moveTo(panel, e.clientX - drag.dx, e.clientY - drag.dy);
+                    if (!drag.moved) {
+                        drag.moved = true;
+                        panel.classList.add('assignmentaifeedback-dragging');
+                    }
+                });
+
+                var endDrag = function() {
+                    if (drag && drag.moved) {
+                        rememberLayout(panel);
+                    }
+                    drag = null;
+                    panel.classList.remove('assignmentaifeedback-dragging');
+                };
+                header.addEventListener('pointerup', endDrag);
+                header.addEventListener('pointercancel', endDrag);
+
+                header.addEventListener('dblclick', function(e) {
+                    if (e.target.closest('button')) {
+                        return;
+                    }
+                    saveLayout(null);
+                    panel.style.width = '';
+                    panel.style.height = '';
+                    placePanel(panel);
+                });
+
+                // A size change via the resize handle (inline width/height) is remembered
+                // together with the position. Content changes alone leave no inline size.
+                if (window.ResizeObserver) {
+                    new window.ResizeObserver(function() {
+                        if (!drag && (panel.style.width || panel.style.height) &&
+                                panel.style.display !== 'none' &&
+                                !panel.classList.contains('assignmentaifeedback-collapsed')) {
+                            rememberLayout(panel);
+                        }
+                    }).observe(panel);
+                }
+
+                window.addEventListener('resize', function() {
+                    placePanel(panel);
+                });
+            };
+
             var buildPanel = function() {
                 var panel = document.createElement('div');
                 panel.id = 'assignmentaifeedback-feedback-panel';
@@ -184,6 +317,7 @@ define(['jquery'], function($) {
 
                 var header = document.createElement('div');
                 header.className = 'assignmentaifeedback-feedback-panel-header';
+                header.title = strings.panelmove || 'Ziehen zum Verschieben, Doppelklick setzt Position und Grösse zurück';
 
                 var title = document.createElement('span');
                 title.className = 'assignmentaifeedback-feedback-panel-title';
@@ -197,6 +331,8 @@ define(['jquery'], function($) {
                 toggle.addEventListener('click', function() {
                     panel.classList.toggle('assignmentaifeedback-collapsed');
                     toggle.textContent = panel.classList.contains('assignmentaifeedback-collapsed') ? '⟨' : '⟩';
+                    // Docked: stay flush right; moved: stay where it is, inside the viewport.
+                    placePanel(panel);
                 });
 
                 header.appendChild(title);
@@ -234,7 +370,14 @@ define(['jquery'], function($) {
                 panel.appendChild(header);
                 panel.appendChild(toolbar);
                 panel.appendChild(body);
+
+                var layout = loadLayout();
+                if (layout) {
+                    panel.style.width = layout.width || '';
+                    panel.style.height = layout.height || '';
+                }
                 document.body.appendChild(panel);
+                makeMovable(panel, header);
                 return panel;
             };
 
@@ -242,6 +385,7 @@ define(['jquery'], function($) {
                 var panel = document.getElementById('assignmentaifeedback-feedback-panel') || buildPanel();
                 panel.querySelector('.assignmentaifeedback-feedback-panel-body').innerHTML = html;
                 panel.style.display = '';
+                placePanel(panel);
             };
 
             var hidePanel = function() {

@@ -141,6 +141,7 @@ $string['js_error_server'] = 'Fehler bei der Kommunikation mit dem Server: ';
 $string['js_panel_title'] = '{$a}-Feedback';
 $string['js_panel_jump'] = 'Zum Feedback-Feld';
 $string['js_panel_collapse'] = 'Ein-/ausklappen';
+$string['js_panel_move'] = 'Ziehen zum Verschieben, Doppelklick setzt Position und Grösse zurück';
 $string['js_panel_apply'] = 'Ins Feedback-Feld übernehmen';
 $string['js_panel_apply_confirm'] = 'Das Feedback-Feld enthält bereits Text. Mit dem KI-Feedback überschreiben?';
 $string['js_panel_apply_failed'] = 'Das Feedback-Feld konnte nicht gefunden werden. Bitte kopieren Sie den Text manuell.';

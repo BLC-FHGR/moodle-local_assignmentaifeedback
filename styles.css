@@ -43,14 +43,18 @@
     display: inline-block;
 }
 
-/* Fixed AI feedback side panel (Variant B) */
+/* Fixed AI feedback side panel (Variant B). Docked right by default; the JS sets
+   left/top, the user moves it by the header and resizes it at the bottom-right corner. */
 .assignmentaifeedback-feedback-panel {
     position: fixed;
     top: 70px;
-    right: 0;
     width: 400px;
+    min-width: 220px;
+    min-height: 120px;
     max-width: 90vw;
     max-height: calc(100vh - 90px);
+    overflow: hidden;
+    resize: both;
     display: flex;
     flex-direction: column;
     background-color: #fff;
@@ -70,6 +74,24 @@
     background-color: #d9edf7;
     border-bottom: 1px solid #bce8f1;
     border-radius: 6px 0 0 0;
+    cursor: move;
+    touch-action: none;
+    user-select: none;
+}
+
+/* Moved away from the right edge: full border and rounded corners. */
+.assignmentaifeedback-feedback-panel.assignmentaifeedback-floating {
+    border-right: 1px solid #bce8f1;
+    border-radius: 6px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+.assignmentaifeedback-feedback-panel.assignmentaifeedback-floating .assignmentaifeedback-feedback-panel-header {
+    border-radius: 6px 6px 0 0;
+}
+
+.assignmentaifeedback-feedback-panel.assignmentaifeedback-dragging {
+    opacity: 0.9;
 }
 
 .assignmentaifeedback-feedback-panel-title {
@@ -120,9 +142,18 @@
     margin-top: 0;
 }
 
-/* Collapsed state: only the header bar remains visible. */
+/* Collapsed state: only the header bar remains visible. !important overrides the
+   size set with the resize handle, which is kept for expanding again. */
 .assignmentaifeedback-feedback-panel.assignmentaifeedback-collapsed {
-    width: auto;
+    width: auto !important;
+    height: auto !important;
+    min-width: 0;
+    min-height: 0;
+    resize: none;
+}
+
+.assignmentaifeedback-feedback-panel.assignmentaifeedback-collapsed .assignmentaifeedback-feedback-panel-header {
+    border-bottom: none;
 }
 
 .assignmentaifeedback-feedback-panel.assignmentaifeedback-collapsed .assignmentaifeedback-feedback-panel-body,
