@@ -45,6 +45,12 @@ class provider implements
     \core_privacy\local\request\plugin\provider,
     \core_privacy\local\request\core_userlist_provider {
 
+    /** @var string[] Tables holding per-student data, each keyed by assignmentid and userid. */
+    private const USER_TABLES = [
+        'local_assignmentaifeedback_feedback',
+        'local_assignmentaifeedback_error',
+    ];
+
     /**
      * Returns meta data about this system.
      *
@@ -70,6 +76,13 @@ class provider implements
             'timemodified' => 'privacy:metadata:local_assignmentaifeedback_feedback:timemodified',
         ], 'privacy:metadata:local_assignmentaifeedback_feedback');
 
+        // Last failed grading run per submission.
+        $collection->add_database_table('local_assignmentaifeedback_error', [
+            'userid' => 'privacy:metadata:local_assignmentaifeedback_error:userid',
+            'errormessage' => 'privacy:metadata:local_assignmentaifeedback_error:errormessage',
+            'timemodified' => 'privacy:metadata:local_assignmentaifeedback_error:timemodified',
+        ], 'privacy:metadata:local_assignmentaifeedback_error');
+
         return $collection;
     }
 
@@ -82,17 +95,19 @@ class provider implements
     public static function get_contexts_for_userid(int $userid): contextlist {
         $contextlist = new contextlist();
 
-        $sql = "SELECT ctx.id
-                  FROM {local_assignmentaifeedback_feedback} f
-                  JOIN {course_modules} cm ON cm.instance = f.assignmentid AND cm.module = :modid
-                  JOIN {context} ctx ON ctx.instanceid = cm.id AND ctx.contextlevel = :modlevel
-                 WHERE f.userid = :userid";
         $params = [
             'modid' => self::get_assign_moduleid(),
             'modlevel' => CONTEXT_MODULE,
             'userid' => $userid,
         ];
-        $contextlist->add_from_sql($sql, $params);
+        foreach (self::USER_TABLES as $table) {
+            $sql = "SELECT ctx.id
+                      FROM {{$table}} f
+                      JOIN {course_modules} cm ON cm.instance = f.assignmentid AND cm.module = :modid
+                      JOIN {context} ctx ON ctx.instanceid = cm.id AND ctx.contextlevel = :modlevel
+                     WHERE f.userid = :userid";
+            $contextlist->add_from_sql($sql, $params);
+        }
 
         return $contextlist;
     }
@@ -108,12 +123,14 @@ class provider implements
             return;
         }
 
-        $sql = "SELECT f.userid
-                  FROM {local_assignmentaifeedback_feedback} f
-                  JOIN {course_modules} cm ON cm.instance = f.assignmentid AND cm.module = :modid
-                 WHERE cm.id = :cmid";
         $params = ['modid' => self::get_assign_moduleid(), 'cmid' => $context->instanceid];
-        $userlist->add_from_sql('userid', $sql, $params);
+        foreach (self::USER_TABLES as $table) {
+            $sql = "SELECT f.userid
+                      FROM {{$table}} f
+                      JOIN {course_modules} cm ON cm.instance = f.assignmentid AND cm.module = :modid
+                     WHERE cm.id = :cmid";
+            $userlist->add_from_sql('userid', $sql, $params);
+        }
     }
 
     /**
@@ -136,17 +153,27 @@ class provider implements
             }
             $record = $DB->get_record('local_assignmentaifeedback_feedback',
                 ['assignmentid' => $assignmentid, 'userid' => $userid]);
-            if (!$record) {
-                continue;
+            if ($record) {
+                $data = (object) [
+                    'feedback' => format_text($record->feedback, FORMAT_HTML),
+                    'submissionhash' => $record->submissionhash,
+                    'timecreated' => transform::datetime($record->timecreated),
+                    'timemodified' => transform::datetime($record->timemodified),
+                ];
+                writer::with_context($context)->export_data(
+                    [get_string('privacy:aifeedbackpath', 'local_assignmentaifeedback')], $data);
             }
-            $data = (object) [
-                'feedback' => format_text($record->feedback, FORMAT_HTML),
-                'submissionhash' => $record->submissionhash,
-                'timecreated' => transform::datetime($record->timecreated),
-                'timemodified' => transform::datetime($record->timemodified),
-            ];
-            writer::with_context($context)->export_data(
-                [get_string('privacy:aifeedbackpath', 'local_assignmentaifeedback')], $data);
+
+            $error = $DB->get_record('local_assignmentaifeedback_error',
+                ['assignmentid' => $assignmentid, 'userid' => $userid]);
+            if ($error) {
+                $data = (object) [
+                    'errormessage' => $error->errormessage,
+                    'timemodified' => transform::datetime($error->timemodified),
+                ];
+                writer::with_context($context)->export_data(
+                    [get_string('privacy:aierrorpath', 'local_assignmentaifeedback')], $data);
+            }
         }
     }
 
@@ -163,7 +190,9 @@ class provider implements
         }
         $assignmentid = self::get_assignmentid_from_context($context);
         if ($assignmentid) {
-            $DB->delete_records('local_assignmentaifeedback_feedback', ['assignmentid' => $assignmentid]);
+            foreach (self::USER_TABLES as $table) {
+                $DB->delete_records($table, ['assignmentid' => $assignmentid]);
+            }
         }
     }
 
@@ -183,8 +212,9 @@ class provider implements
             }
             $assignmentid = self::get_assignmentid_from_context($context);
             if ($assignmentid) {
-                $DB->delete_records('local_assignmentaifeedback_feedback',
-                    ['assignmentid' => $assignmentid, 'userid' => $userid]);
+                foreach (self::USER_TABLES as $table) {
+                    $DB->delete_records($table, ['assignmentid' => $assignmentid, 'userid' => $userid]);
+                }
             }
         }
     }
@@ -211,8 +241,9 @@ class provider implements
         }
         [$insql, $inparams] = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
         $params = array_merge(['assignmentid' => $assignmentid], $inparams);
-        $DB->delete_records_select('local_assignmentaifeedback_feedback',
-            "assignmentid = :assignmentid AND userid $insql", $params);
+        foreach (self::USER_TABLES as $table) {
+            $DB->delete_records_select($table, "assignmentid = :assignmentid AND userid $insql", $params);
+        }
     }
 
     /**

@@ -60,5 +60,31 @@ function xmldb_local_assignmentaifeedback_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026103000, 'local', 'assignmentaifeedback');
     }
 
+    if ($oldversion < 2026103001) {
+        // Last failed grading run per submission. Without it a failed run was only
+        // visible in the cron output: the panel kept waiting or kept promising a new
+        // suggestion that would never come.
+        $table = new xmldb_table('local_assignmentaifeedback_error');
+
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('assignmentid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('errormessage', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('retrying', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('assignmentid', XMLDB_KEY_FOREIGN, ['assignmentid'], 'assign', ['id']);
+        $table->add_key('userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
+
+        $table->add_index('assignmentuser', XMLDB_INDEX_UNIQUE, ['assignmentid', 'userid']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        upgrade_plugin_savepoint(true, 2026103001, 'local', 'assignmentaifeedback');
+    }
+
     return true;
 }

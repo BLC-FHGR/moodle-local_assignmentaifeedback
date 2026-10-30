@@ -3,6 +3,26 @@
 Änderungen an der FHGR-Fassung von `local_assignmentaifeedback` (bis v2.6.0-fhgr:
 `local_aigrade`). Einträge vor v3.0.0-fhgr nennen weiterhin die damaligen Namen.
 
+## v3.3.1-fhgr - 2026-10-30
+**A failed grading run is shown in the panel.** Previously it only appeared in the cron
+output: after a button click the panel waited 15 minutes and then claimed the suggestion
+was still being generated, and with automatic grading an outdated suggestion promised a
+new one that never came.
+- New table `local_assignmentaifeedback_error` (upgrade step `2026103001`): the last
+  failed run per submission, with its error message (never submission content) and
+  whether the task is retried. A successful run removes it.
+- The panel shows the error in red, with "retried automatically" while attempts are
+  left. It also appears when there is no suggestion yet. Polling after a button click
+  stops at a final error and enables the button again.
+- With automatic grading the single grading button now appears when the suggestion is
+  outdated or the last run failed for good, so the teacher is no longer stuck.
+- A missing grading account is recorded as an error, too (`error_no_grader_account`).
+- Fix: a task that had used up its attempts still counted as waiting, so a changed
+  submission was not queued again until core removed the task.
+- Removed the unused `grader::grade_submissions()`.
+- New strings `js_panel_error`, `js_panel_error_retry`, `error_no_grader_account` and
+  privacy strings (de/en). Privacy API covers the new table.
+
 ## v3.3.0-fhgr - 2026-10-30
 **A changed submission is graded again.** Previously any stored suggestion blocked every
 further run: when a student uploaded a new file, the automatic run was skipped

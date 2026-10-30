@@ -50,10 +50,16 @@ if ($record) {
     $stale = $grader->is_feedback_stale($record, $userid);
 }
 
+// The last grading run, if it failed. A successful run removes it.
+$error = \local_assignmentaifeedback\grader::get_error_record($assignment->get_instance()->id, $userid);
+
 echo json_encode([
     'success'      => true,
     'feedback'     => $record ? (string) $record->feedback : '',
     'timemodified' => $record ? (int) $record->timemodified : 0,
     'stale'        => $stale,
+    'error'        => $error ? (string) $error->errormessage : '',
+    'errortime'    => $error ? (int) $error->timemodified : 0,
+    'retrying'     => $error && !empty($error->retrying),
 ]);
 die();

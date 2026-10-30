@@ -35,9 +35,10 @@ define(['jquery'], function($) {
          * @param {string} sesskey     Session key
          * @param {Object} strings     Localised UI strings
          * @param {string} feedbackUrl AJAX URL to fetch stored feedback
-         * @param {boolean} showButton Whether to offer the manual grading button. False when
-         *                             the assignment grades automatically on submission; the
-         *                             panel below is still shown, it displays the result.
+         * @param {boolean} showButton Whether to always offer the manual grading button. False
+         *                             when the assignment grades automatically on submission:
+         *                             the button then only appears for an outdated suggestion
+         *                             or a failed run. The panel is shown either way.
          */
         init: function(buttonUrl, buttonText, sesskey, strings, feedbackUrl, showButton) {
 
@@ -48,6 +49,16 @@ define(['jquery'], function($) {
             var currentFeedbackHtml = '';
             // The userid the panel currently reflects, to detect submission switches.
             var loadedUserid = null;
+            // With automatic grading the button is only offered when the automatic run
+            // cannot be relied on: the suggestion is outdated or the last run failed for good.
+            var buttonNeeded = false;
+
+            var setButtonNeeded = function(needed) {
+                buttonNeeded = needed;
+                if (!showButton) {
+                    $('.local_assignmentaifeedback-button-container').toggle(needed);
+                }
+            };
 
             var getUserId = function() {
                 var urlParams = new URLSearchParams(window.location.search);
@@ -364,13 +375,16 @@ define(['jquery'], function($) {
                 toolbar.appendChild(apply);
                 toolbar.appendChild(jump);
 
+                // Shown when the last grading run failed.
+                var error = document.createElement('div');
+                error.className = 'alert alert-danger small assignmentaifeedback-feedback-panel-error';
+                error.setAttribute('role', 'alert');
+                error.style.display = 'none';
+
                 // Shown when the suggestion was generated from an earlier version of the submission.
                 var stale = document.createElement('div');
                 stale.className = 'alert alert-warning small assignmentaifeedback-feedback-panel-stale';
                 stale.setAttribute('role', 'status');
-                stale.textContent = showButton
-                    ? (strings.stale || 'The submission was changed after this suggestion was generated.')
-                    : (strings.staleauto || 'The submission was changed after this suggestion was generated.');
                 stale.style.display = 'none';
 
                 var body = document.createElement('div');
@@ -378,6 +392,7 @@ define(['jquery'], function($) {
 
                 panel.appendChild(header);
                 panel.appendChild(toolbar);
+                panel.appendChild(error);
                 panel.appendChild(stale);
                 panel.appendChild(body);
 
@@ -391,14 +406,6 @@ define(['jquery'], function($) {
                 return panel;
             };
 
-            var showPanel = function(html, stale) {
-                var panel = document.getElementById('assignmentaifeedback-feedback-panel') || buildPanel();
-                panel.querySelector('.assignmentaifeedback-feedback-panel-body').innerHTML = html;
-                panel.querySelector('.assignmentaifeedback-feedback-panel-stale').style.display = stale ? '' : 'none';
-                panel.style.display = '';
-                placePanel(panel);
-            };
-
             var hidePanel = function() {
                 var panel = document.getElementById('assignmentaifeedback-feedback-panel');
                 if (panel) {
@@ -407,9 +414,51 @@ define(['jquery'], function($) {
                 }
             };
 
+            // Show the stored suggestion and the outcome of the last grading run (a
+            // get_feedback.php response), or hide the panel when there is neither.
+            var renderPanel = function(response) {
+                response = response || {};
+                var feedback = (response.feedback && !isEmptyContent(response.feedback)) ? response.feedback : '';
+                var error = response.error || '';
+                var failed = !!error && !response.retrying;
+
+                currentFeedbackHtml = feedback;
+                setButtonNeeded(!!(feedback && response.stale) || failed);
+
+                if (!feedback && !error) {
+                    hidePanel();
+                    return;
+                }
+
+                var panel = document.getElementById('assignmentaifeedback-feedback-panel') || buildPanel();
+
+                var errorbox = panel.querySelector('.assignmentaifeedback-feedback-panel-error');
+                errorbox.textContent = error
+                    ? (strings.error || 'The last grading run failed:') + ' ' + error +
+                        (response.retrying ? ' ' + (strings.errorretry || 'It is retried automatically.') : '')
+                    : '';
+                errorbox.style.display = error ? '' : 'none';
+
+                // Without automatic grading, or once the automatic run failed, the
+                // button is the way to a new suggestion.
+                var stalebox = panel.querySelector('.assignmentaifeedback-feedback-panel-stale');
+                stalebox.textContent = (showButton || failed)
+                    ? (strings.stale || 'The submission was changed after this suggestion was generated.')
+                    : (strings.staleauto || 'The submission was changed after this suggestion was generated.');
+                stalebox.style.display = (feedback && response.stale) ? '' : 'none';
+
+                // Nothing to apply while there is only an error.
+                panel.querySelector('.assignmentaifeedback-feedback-panel-toolbar').style.display = feedback ? '' : 'none';
+                panel.querySelector('.assignmentaifeedback-feedback-panel-body').innerHTML = feedback;
+                panel.style.display = '';
+                placePanel(panel);
+            };
+
             // Load the stored AI feedback for a given submission and show/hide the panel.
             var loadFeedbackFor = function(userid) {
                 loadedUserid = userid;
+                // Whatever the previous submission needed does not apply to this one.
+                setButtonNeeded(false);
                 if (!feedbackUrl) {
                     return;
                 }
@@ -422,17 +471,10 @@ define(['jquery'], function($) {
                         if (userid !== getUserId()) {
                             return;
                         }
-                        if (response && response.success && response.feedback && !isEmptyContent(response.feedback)) {
-                            currentFeedbackHtml = response.feedback;
-                            showPanel(response.feedback, response.stale);
-                        } else {
-                            currentFeedbackHtml = '';
-                            hidePanel();
-                        }
+                        renderPanel(response && response.success ? response : null);
                     },
                     error: function() {
-                        currentFeedbackHtml = '';
-                        hidePanel();
+                        renderPanel(null);
                     }
                 });
             };
@@ -453,8 +495,10 @@ define(['jquery'], function($) {
 
             // Wait for the suggestion a queued grading run produces. 'since' is the
             // timemodified of the feedback that was on screen when the run was
-            // queued, so a regrade is not mistaken for the old suggestion.
-            var pollForFeedback = function(userid, since, btn, originalText) {
+            // queued, so a regrade is not mistaken for the old suggestion. 'queuedat'
+            // is the server time of queueing: only a failure recorded after it
+            // belongs to this run.
+            var pollForFeedback = function(userid, since, queuedat, btn, originalText) {
                 var started = Date.now();
 
                 var finish = function() {
@@ -479,11 +523,20 @@ define(['jquery'], function($) {
 
                             if (response && response.success && response.timemodified > since &&
                                     !isEmptyContent(response.feedback)) {
-                                currentFeedbackHtml = response.feedback;
                                 loadedUserid = userid;
-                                showPanel(response.feedback, response.stale);
+                                renderPanel(response);
                                 finish();
                                 return;
+                            }
+
+                            // The run failed: show it. Keep waiting while it is retried.
+                            if (response && response.success && response.error && response.errortime >= queuedat) {
+                                loadedUserid = userid;
+                                renderPanel(response);
+                                if (!response.retrying) {
+                                    finish();
+                                    return;
+                                }
                             }
 
                             if (Date.now() - started > POLL_MAX_MS) {
@@ -502,12 +555,6 @@ define(['jquery'], function($) {
             };
 
             var insertButton = function() {
-                // Nothing to insert when the assignment grades automatically on submission.
-                // Reported as "done" so the retry interval below stops straight away.
-                if (!showButton) {
-                    return true;
-                }
-
                 if ($('.assignmentaifeedback-single-button').length > 0) {
                     return true;
                 }
@@ -542,15 +589,15 @@ define(['jquery'], function($) {
                                     // suggestion to show up instead of blocking the request.
                                     if (response.queued) {
                                         btn.text(strings.queued || 'Queued...');
-                                        pollForFeedback(currentUserid, response.since || 0, btn, originalText);
+                                        pollForFeedback(currentUserid, response.since || 0, response.queuedat || 0,
+                                            btn, originalText);
                                         return;
                                     }
                                     // Show the new suggestion directly in the panel; nothing
                                     // is written to the feedback field (advisory only).
                                     if (response.feedback) {
-                                        currentFeedbackHtml = response.feedback;
                                         loadedUserid = currentUserid;
-                                        showPanel(response.feedback, false);
+                                        renderPanel({feedback: response.feedback});
                                     }
                                     btn.prop('disabled', false).text(originalText);
                                     btn.data('force-regrade', false)
@@ -581,6 +628,11 @@ define(['jquery'], function($) {
                 var container = $('<div>')
                     .addClass('local_assignmentaifeedback-button-container')
                     .append(button);
+
+                // With automatic grading the button stays hidden until it is needed.
+                if (!showButton) {
+                    container.toggle(buttonNeeded);
+                }
 
                 var inserted = false;
 

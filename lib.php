@@ -293,12 +293,11 @@ function local_assignmentaifeedback_before_footer() {
         return '';
     }
 
-    // With automatic grading on submission the event observer queues every run, so neither
-    // manual button has anything left to trigger: both skip submissions that already carry a
-    // suggestion, and pressing them would at best queue a duplicate run for the few the
-    // observer has not reached yet. Both buttons are therefore hidden -- but only the
-    // buttons: the side panel on the single grading page is what displays the suggestion the
-    // automatic run produced, so that page keeps loading its module with the button off.
+    // With automatic grading on submission the event observer queues every run, so the bulk
+    // button has nothing left to trigger and is not offered. The single grading page keeps
+    // loading its module: the side panel displays the suggestion the automatic run produced,
+    // and the single button reappears there when that run cannot be relied on (outdated
+    // suggestion or failed run).
     $autograde = !empty($config->auto_grade);
 
     // Check capability
@@ -339,6 +338,8 @@ function local_assignmentaifeedback_before_footer() {
             'panelmove'       => get_string('js_panel_move', 'local_assignmentaifeedback'),
             'stale'           => get_string('js_panel_stale', 'local_assignmentaifeedback'),
             'staleauto'       => get_string('js_panel_stale_auto', 'local_assignmentaifeedback'),
+            'error'           => get_string('js_panel_error', 'local_assignmentaifeedback'),
+            'errorretry'      => get_string('js_panel_error_retry', 'local_assignmentaifeedback'),
             'apply'           => get_string('js_panel_apply', 'local_assignmentaifeedback'),
             'applyconfirm'    => get_string('js_panel_apply_confirm', 'local_assignmentaifeedback'),
             'applyfailed'     => get_string('js_panel_apply_failed', 'local_assignmentaifeedback'),

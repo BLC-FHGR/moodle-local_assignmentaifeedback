@@ -104,6 +104,8 @@ if ($action === 'grade') {
         // The panel polls until a suggestion newer than this appears, so a regrade
         // is not mistaken for the feedback that is already on screen.
         'since'    => $existing ? (int) $existing->timemodified : 0,
+        // Only a failure recorded from now on belongs to this run.
+        'queuedat' => time(),
     ]);
     die();
 }

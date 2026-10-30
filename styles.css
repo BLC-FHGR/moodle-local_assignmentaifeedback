@@ -120,7 +120,8 @@
     background-color: #f7fbfd;
 }
 
-/* Notice that the suggestion belongs to an earlier version of the submission. */
+/* Notices: last run failed, suggestion belongs to an earlier version of the submission. */
+.assignmentaifeedback-feedback-panel-error,
 .assignmentaifeedback-feedback-panel-stale {
     margin: 0;
     padding: 6px 12px;
@@ -166,7 +167,8 @@
 
 .assignmentaifeedback-feedback-panel.assignmentaifeedback-collapsed .assignmentaifeedback-feedback-panel-body,
 .assignmentaifeedback-feedback-panel.assignmentaifeedback-collapsed .assignmentaifeedback-feedback-panel-toolbar,
-.assignmentaifeedback-feedback-panel.assignmentaifeedback-collapsed .assignmentaifeedback-feedback-panel-stale {
+.assignmentaifeedback-feedback-panel.assignmentaifeedback-collapsed .assignmentaifeedback-feedback-panel-stale,
+.assignmentaifeedback-feedback-panel.assignmentaifeedback-collapsed .assignmentaifeedback-feedback-panel-error {
     display: none;
 }
 

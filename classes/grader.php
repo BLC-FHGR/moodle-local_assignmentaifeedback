@@ -60,62 +60,6 @@ class grader {
     }
 
     /**
-     * Grade all submissions that do not have AI feedback yet.
-     *
-     * The 'count' key is always present, also on failure: it is a required field
-     * of the local_assignmentaifeedback_grade_bulk external function's return structure.
-     *
-     * @return array Result with success status, count, and any errors
-     */
-    public function grade_submissions() {
-        try {
-            $rubric_text = $this->get_rubric_text();
-            if (!$rubric_text) {
-                $rubric_text = $this->get_assignment_description();
-            }
-
-            $has_rubric_text = $this->get_rubric_text();
-            $instructions    = $this->resolve_instructions((bool)$has_rubric_text);
-
-            $pending = $this->get_pending_submissions();
-
-            if (empty($pending)) {
-                return ['success' => false, 'count' => 0, 'error' => get_string('no_ungraded', 'local_assignmentaifeedback')];
-            }
-
-            $count = 0;
-            foreach ($pending as $userid => $submission) {
-                $fingerprint     = $this->get_submission_fingerprint($userid);
-                $submission_text = $this->get_submission_text($userid);
-
-                if (empty($submission_text)) {
-                    continue;
-                }
-
-                $max_grade = $this->get_max_grade();
-
-                $prompt   = $this->build_prompt($instructions, $rubric_text, $submission_text, $max_grade);
-                $feedback = $this->call_ai_service($prompt);
-
-                if ($feedback) {
-                    $this->save_feedback($userid, $feedback, $fingerprint);
-                    $count++;
-                }
-            }
-
-            return ['success' => true, 'count' => $count];
-
-        } catch (\Exception $e) {
-            // 'retryable': the failure came from the AI service (timeout, gateway
-            // error, quota) rather than from the submission itself, so a later
-            // attempt may well succeed. Callers running in a task use this to fail
-            // the task so Moodle retries it. Extra keys are ignored by
-            // external_api::clean_returnvalue(), so this is safe for web services.
-            return ['success' => false, 'count' => 0, 'error' => $e->getMessage(), 'retryable' => true];
-        }
-    }
-
-    /**
      * Grade a single submission using AI.
      *
      * A failure caused by the AI service (rather than by the submission) carries
@@ -168,7 +112,10 @@ class grader {
             return ['success' => false, 'error' => get_string('error_no_feedback', 'local_assignmentaifeedback')];
 
         } catch (\Exception $e) {
-            // See the note on 'retryable' in grade_submissions().
+            // 'retryable': the failure came from the AI service (timeout, gateway
+            // error, quota) rather than from the submission itself, so a later
+            // attempt may well succeed. The grading task uses this to fail the
+            // task so Moodle retries it.
             return ['success' => false, 'error' => $e->getMessage(), 'retryable' => true];
         }
     }
@@ -790,11 +737,63 @@ class grader {
             $record->feedback       = $feedback;
             $record->submissionhash = $fingerprint;
             $record->timecreated    = $now;
-            $record->timemodified = $now;
+            $record->timemodified   = $now;
             $DB->insert_record('local_assignmentaifeedback_feedback', $record);
         }
 
+        // A successful run supersedes any earlier failure.
+        $DB->delete_records('local_assignmentaifeedback_error', [
+            'assignmentid' => $assignmentid,
+            'userid'       => $userid,
+        ]);
+
         return true;
+    }
+
+    /**
+     * Remember that a grading run for a submission failed, so the panel can show it.
+     *
+     * Only the error message is stored, never submission content.
+     *
+     * @param int $assignmentid
+     * @param int $userid
+     * @param string $message
+     * @param bool $retrying Whether the task is retried automatically
+     */
+    public static function record_error($assignmentid, $userid, $message, $retrying) {
+        global $DB;
+
+        $data = (object) [
+            'errormessage' => \core_text::substr((string) $message, 0, 1000),
+            'retrying'     => $retrying ? 1 : 0,
+            'timemodified' => time(),
+        ];
+
+        $existing = self::get_error_record($assignmentid, $userid);
+        if ($existing) {
+            $data->id = $existing->id;
+            $DB->update_record('local_assignmentaifeedback_error', $data);
+        } else {
+            $data->assignmentid = $assignmentid;
+            $data->userid       = $userid;
+            $DB->insert_record('local_assignmentaifeedback_error', $data);
+        }
+    }
+
+    /**
+     * Fetch the last failed grading run for a submission.
+     *
+     * @param int $assignmentid
+     * @param int $userid
+     * @return \stdClass|false The record, or false if the last run did not fail
+     */
+    public static function get_error_record($assignmentid, $userid) {
+        global $DB;
+
+        return $DB->get_record('local_assignmentaifeedback_error', [
+            'assignmentid' => $assignmentid,
+            'userid'       => $userid,
+        ]);
     }
 
     /**

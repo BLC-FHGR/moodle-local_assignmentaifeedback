@@ -89,7 +89,10 @@ class autograde_task extends \core\task\adhoc_task {
         global $DB;
 
         $record = \core\task\manager::record_from_adhoc_task($task);
-        $select = 'classname = :classname AND component = :component AND timestarted IS NULL AND '
+        // A task that used up its attempts stays in the table until core cleans it up,
+        // but will never run again.
+        $select = 'classname = :classname AND component = :component AND timestarted IS NULL'
+            . ' AND (attemptsavailable > 0 OR attemptsavailable IS NULL) AND '
             . $DB->sql_compare_text('customdata', \core_text::strlen($record->customdata) + 1) . ' = :customdata';
 
         return $DB->record_exists_select('task_adhoc', $select, [
@@ -140,6 +143,8 @@ class autograde_task extends \core\task\adhoc_task {
         // the person who asked for the grading.
         $graderuser = self::resolve_grader_user($context, (int) ($data->graderid ?? 0));
         if (!$graderuser) {
+            \local_assignmentaifeedback\grader::record_error($cm->instance, $data->userid,
+                get_string('error_no_grader_account', 'local_assignmentaifeedback'), false);
             mtrace('local_assignmentaifeedback autograde: no valid grading account configured/found - skipped.');
             return;
         }
@@ -168,12 +173,16 @@ class autograde_task extends \core\task\adhoc_task {
                     // makes Moodle mark the task as failed and retry it with its usual
                     // backoff, instead of silently dropping the submission: previously
                     // the task completed successfully here and the queued entry was
-                    // deleted, so the suggestion was lost for good.
+                    // deleted, so the suggestion was lost for good. Core decrements
+                    // the attempts after this run, so 1 left means this was the last.
+                    $retrying = $this->get_attempts_available() > 1;
+                    \local_assignmentaifeedback\grader::record_error($cm->instance, $data->userid, $err, $retrying);
                     mtrace('local_assignmentaifeedback autograde: userid=' . $data->userid
-                        . ' failed, will be retried - ' . $err);
+                        . ($retrying ? ' failed, will be retried - ' : ' failed, no attempts left - ') . $err);
                     throw new \moodle_exception('error_autograde_failed', 'local_assignmentaifeedback', '', $err);
                 } else {
                     // Nothing to retry (e.g. the submission carries no readable text).
+                    \local_assignmentaifeedback\grader::record_error($cm->instance, $data->userid, $err, false);
                     mtrace('local_assignmentaifeedback autograde: userid=' . $data->userid . ' failed - ' . $err);
                 }
             } else {
