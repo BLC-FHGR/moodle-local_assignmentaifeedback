@@ -69,6 +69,7 @@ Doppeleinträge wiederholt werden.
 - **Name der KI-Assistenz** (Standard: „KI")
 - **Standard-Anweisungen (mit Raster)** und **(ohne Raster)** – werden in neue Aufgaben übernommen
 - **Konto für automatische Bewertung** und **Zeitlimit für Hintergrund-Anfragen**
+- **Verarbeitung von PDF-Abgaben** (siehe unten)
 
 > **Hinweis:** Alle KI-Anfragen laufen im Hintergrund (Moodle-Ad-hoc-Task) – auch die über
 > die Bewertungs-Buttons ausgelösten. Der Klick reiht den Lauf ein und antwortet sofort; der
@@ -81,6 +82,42 @@ In den globalen Einstellungen lässt sich das Backend wählen:
 - **Moodle Core AI-Subsystem:** nutzt die unter **Website-Administration → KI → KI-Anbieter** eingerichteten Anbieter.
 
 Beachten Sie die Datenschutzvorgaben Ihrer Hochschule (siehe unten).
+
+### PDF-Abgaben über Open WebUI
+
+> **In Vorbereitung:** Einstellung und Verbindung sind vorhanden, die Bewertung nutzt den
+> Modus aber noch nicht. Bis dahin wird jede PDF-Datei wie bisher in Moodle extrahiert.
+
+Standardmässig liest Moodle den Text von PDF-Abgaben mit `pdftotext` aus. Alternativ lädt
+der Modus **„Als Datei an Open WebUI senden"** jede PDF-Datei zu Open WebUI hoch. Open WebUI
+extrahiert den Inhalt mit der dort konfigurierten Engine (z. B. mit OCR) und übergibt das
+ganze Dokument an das Modell (`context: "full"` pro Datei); danach wird die Datei gelöscht.
+Beurteilungsraster, Onlinetext und andere Dateitypen werden immer in Moodle extrahiert.
+
+Voraussetzungen:
+- Backend **Local AI Manager**. Mit dem Moodle-Core-AI-Subsystem ist die Einstellung
+  ausgeblendet und ohne Wirkung.
+- Das KI-Tool, das dem gewählten Purpose zugewiesen ist, nutzt den **ChatGPT-Connector**
+  (ohne Azure) mit einem Open-WebUI-Endpunkt, der auf `/api/chat/completions` endet.
+  **Endpunkt, API-Schlüssel und Modell** werden aus diesem Tool übernommen, für die Rolle
+  des Kontos, unter dem der Lauf läuft. Es gibt keine eigenen Zugangsdaten im Plugin.
+- Vor jeder Anfrage gelten dieselben Prüfungen wie im `local_ai_manager` (Capability,
+  Tenant, Sperre, bestätigte Nutzungsbedingungen, Kurs-Scope, Kontingent). Die Anfragen
+  selbst gehen aber **direkt** an Open WebUI: Sie werden im `local_ai_manager` weder
+  protokolliert noch gezählt.
+- Open WebUI fügt den Dateiinhalt über sein **RAG-Template** ein, das eigene Anweisungen
+  enthalten kann (z. B. Quellenangaben). Prüfen unter *Admin-Bereich → Einstellungen →
+  Dokumente*. Ignoriert eine ältere Open-WebUI-Version `context: "full"`, dort
+  „Bypass Embedding and Retrieval" aktivieren.
+
+Verbindung testen (lädt die Datei hoch, wartet auf die Verarbeitung, fragt das Modell nach
+einer Zusammenfassung und dem letzten Satz und löscht die Datei wieder):
+
+```bash
+sudo -u www-data php local/assignmentaifeedback/cli/test_openwebui.php --file=/pfad/test.pdf --user=<benutzername>
+```
+
+Stimmt der zitierte letzte Satz, hat Open WebUI das ganze Dokument übergeben.
 
 ### Rechte (Capabilities)
 
@@ -147,6 +184,7 @@ In der Abgabenübersicht **„Alle mit KI bewerten"**. Es werden nur Abgaben ver
 - Abgabetexte werden an den im `local_ai_manager` (bzw. im Moodle-AI-Subsystem) konfigurierten KI-Anbieter übermittelt. Bei lokal gehosteten Modellen bleiben sie in der eigenen Infrastruktur. Klären Sie die Vereinbarkeit mit den Datenschutzvorgaben Ihrer Hochschule (in der Schweiz insb. revDSG) und informieren Sie die Studierenden.
 - Der `local_ai_manager` protokolliert Prompt und Antwort in `local_ai_manager_request_log` (Zugriff über Capabilities steuern).
 - Dieses Plugin speichert pro Abgabe nur den KI-Vorschlag, einen Fingerabdruck der Abgabe (SHA-1, kein Inhalt) und die Fehlermeldung des letzten fehlgeschlagenen Laufs (ohne Abgabeinhalt). Es implementiert die Moodle-Privacy-API.
+- Im PDF-Modus „Als Datei an Open WebUI senden" werden PDF-Dateien zu Open WebUI hochgeladen und nach der Anfrage wieder gelöscht. Wird der Prozess hart abgebrochen (z. B. Zeitlimit), kann eine Datei in Open WebUI liegen bleiben. Diese Anfragen erscheinen **nicht** im Protokoll des `local_ai_manager`.
 - Diese Version enthält **kein** Debug-Logging von Abgaben und **keinen** externen Google-Docs-Abruf (in der Ursprungsversion vorhanden, aus Datenschutzgründen entfernt).
 
 ## Grenzen

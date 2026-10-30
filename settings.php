@@ -82,6 +82,28 @@ if ($hassiteconfig) {
         $purposeoptions
     ));
 
+    // How PDF submission files reach the AI: as text extracted in Moodle (through the
+    // selected backend) or as files uploaded to Open WebUI. The Open WebUI mode takes
+    // endpoint, API key and model from the Local AI Manager tool of the purpose above,
+    // so it only exists with that backend.
+    $settings->add(new admin_setting_heading(
+        'local_assignmentaifeedback/pdfmode_heading',
+        get_string('setting_pdfmode_heading', 'local_assignmentaifeedback'),
+        ''
+    ));
+
+    $settings->add(new admin_setting_configselect(
+        'local_assignmentaifeedback/pdfmode',
+        get_string('setting_pdfmode', 'local_assignmentaifeedback'),
+        get_string('setting_pdfmode_desc', 'local_assignmentaifeedback'),
+        'text',
+        [
+            'text'      => get_string('pdfmode_text', 'local_assignmentaifeedback'),
+            'openwebui' => get_string('pdfmode_openwebui', 'local_assignmentaifeedback'),
+        ]
+    ));
+    $settings->hide_if('local_assignmentaifeedback/pdfmode', 'local_assignmentaifeedback/ai_backend', 'neq', 'ai_manager');
+
     // Service account for automatic grading on submission (background/cron).
     $settings->add(new admin_setting_configtext(
         'local_assignmentaifeedback/autograde_user',

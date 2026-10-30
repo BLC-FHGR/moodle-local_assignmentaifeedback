@@ -63,6 +63,11 @@ $string['backend_ai_manager'] = 'Local AI Manager (local models)';
 $string['backend_core'] = 'Moodle core AI subsystem';
 $string['setting_ai_manager_purpose'] = 'Local AI Manager: purpose';
 $string['setting_ai_manager_purpose_desc'] = 'Only relevant when the backend is set to "Local AI Manager". The AI grader sends the prompt through this purpose. The model used is configured per purpose and role inside Local AI Manager - choose the purpose you assigned your desired (local) model to. Recommended: "feedback".';
+$string['setting_pdfmode_heading'] = 'PDF submissions';
+$string['setting_pdfmode'] = 'Processing of PDF submissions';
+$string['setting_pdfmode_desc'] = 'How PDF files in a submission reach the AI. <strong>Extract text in Moodle</strong> (default) reads the text with pdftotext and sends it through the selected AI backend. <strong>Send as file to Open WebUI</strong> uploads each PDF to Open WebUI, which extracts the content with its own configured engine and passes the full document to the model; the file is deleted afterwards. The rubric, online text and other file types are always extracted in Moodle.<br><strong>Requirements:</strong> backend "Local AI Manager", and the AI tool assigned to the purpose above uses the ChatGPT (OpenAI-compatible) connector with an Open WebUI endpoint ending in /api/chat/completions. Endpoint, API key and model are taken from that tool, for the role of the account the request runs under. With the backend "Moodle core AI subsystem" this setting has no effect.<br><strong>Note:</strong> the requests go to Open WebUI directly, not through Local AI Manager. They do not appear in its request log and do not count against its quotas. Open WebUI inserts the file content with its RAG template, which may add instructions of its own (e.g. citations); check it in Open WebUI under Admin Panel > Settings > Documents. The plugin requests the full content per file; if your Open WebUI version ignores that, enable "Bypass Embedding and Retrieval" there.';
+$string['pdfmode_text'] = 'Extract text in Moodle';
+$string['pdfmode_openwebui'] = 'Send as file to Open WebUI';
 $string['error_ai_manager_missing'] = 'The "local_ai_manager" plugin is not installed or unavailable. Install it, or select the Moodle core AI subsystem as the backend.';
 
 
@@ -77,6 +82,14 @@ $string['task_autograde'] = 'Background AI grading (AI Grader)';
 $string['error_autograde_failed'] = 'AI grading failed and will be retried: {$a}';
 $string['error_queue_failed'] = 'The grading run could not be queued. Please try again.';
 $string['error_no_grader_account'] = 'No valid account was found to run the AI request under. Check the plugin setting "Account for automatic grading" or the permissions of the person who started the run.';
+$string['error_openwebui_tool'] = 'The AI tool assigned to the purpose "{$a}" in Local AI Manager is not an Open WebUI endpoint. It has to use the ChatGPT connector (without Azure) with an endpoint ending in /api/chat/completions.';
+$string['error_openwebui_noapikey'] = 'The AI tool in Local AI Manager has no API key for Open WebUI.';
+$string['error_openwebui_nomodel'] = 'The AI tool in Local AI Manager has no model assigned.';
+$string['error_openwebui_restricted'] = 'Access to the AI tools is restricted: {$a}';
+$string['error_openwebui_request'] = 'Open WebUI request failed ({$a->step}): {$a->message}';
+$string['error_openwebui_badresponse'] = 'Open WebUI returned an unexpected response.';
+$string['error_openwebui_processing'] = 'Open WebUI could not process the PDF file: {$a}';
+$string['error_openwebui_processtimeout'] = 'Open WebUI did not finish processing the PDF file in time.';
 $string['js_queued'] = 'Queued...';
 $string['js_pending_timeout'] = 'The AI suggestion is still being generated in the background. It will appear in this panel as soon as it is ready - you can leave this page and come back later.';
 

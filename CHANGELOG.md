@@ -3,6 +3,20 @@
 Änderungen an der FHGR-Fassung von `local_assignmentaifeedback` (bis v2.6.0-fhgr:
 `local_aigrade`). Einträge vor v3.0.0-fhgr nennen weiterhin die damaligen Namen.
 
+## v3.4.0-fhgr - in progress
+**Optional: send PDF submissions to Open WebUI as files.** Groundwork only, the grading
+does not use the new mode yet; every PDF is still extracted in Moodle.
+- New setting `pdfmode` ("Extract text in Moodle" by default, or "Send as file to Open
+  WebUI"), shown only with the Local AI Manager backend.
+- New `openwebui_client`: takes endpoint, API key and model from the Local AI Manager tool
+  assigned to the purpose (ChatGPT connector with an Open WebUI endpoint), repeats the
+  access checks Local AI Manager runs before its own requests (capability, tenant, lock,
+  terms of use, scope, restrictions, quota), uploads a file, waits for processing, chats
+  with the file attached in full (`context: "full"`) and deletes it.
+- New CLI script `cli/test_openwebui.php` to test the connection.
+- New `request_timeout::background_seconds()`, error strings `error_openwebui_*` (de/en).
+- README brought up to date with v3.3.x (outdated suggestions, failed runs) and the PDF mode.
+
 ## v3.3.1-fhgr - 2026-10-30
 **A failed grading run is shown in the panel.** Previously it only appeared in the cron
 output: after a button click the panel waited 15 minutes and then claimed the suggestion

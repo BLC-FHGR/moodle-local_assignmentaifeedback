@@ -66,6 +66,22 @@ class request_timeout {
     }
 
     /**
+     * Timeout in seconds for a request of a background run that this plugin sends itself.
+     *
+     * An explicit 0 means "keep the site-wide value", so the local_ai_manager timeout
+     * applies then, as it would for requests sent through that plugin.
+     *
+     * @return int
+     */
+    public static function background_seconds(): int {
+        $timeout = self::resolve('autograde_timeout', self::DEFAULT_BACKGROUND_TIMEOUT);
+        if ($timeout <= 0) {
+            $timeout = (int) get_config('local_ai_manager', 'requesttimeout');
+        }
+        return $timeout > 0 ? $timeout : self::DEFAULT_BACKGROUND_TIMEOUT;
+    }
+
+    /**
      * Read a timeout setting, falling back to the default if it was never written
      * (e.g. the plugin upgrade has not been run yet).
      *

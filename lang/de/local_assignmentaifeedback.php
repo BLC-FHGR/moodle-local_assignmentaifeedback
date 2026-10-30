@@ -62,6 +62,11 @@ $string['backend_ai_manager'] = 'Local AI Manager (lokale Modelle)';
 $string['backend_core'] = 'Moodle Core AI-Subsystem';
 $string['setting_ai_manager_purpose'] = 'Local AI Manager: Verwendungszweck (Purpose)';
 $string['setting_ai_manager_purpose_desc'] = 'Nur relevant, wenn als Backend „Local AI Manager" gewählt ist. Der AI Grader sendet den Prompt über diesen Verwendungszweck. Das dabei verwendete Modell wird im Local AI Manager pro Verwendungszweck und Rolle festgelegt – wählen Sie den Zweck, dem Sie Ihr gewünschtes (lokales) Modell zugewiesen haben. Empfehlung: „feedback".';
+$string['setting_pdfmode_heading'] = 'PDF-Abgaben';
+$string['setting_pdfmode'] = 'Verarbeitung von PDF-Abgaben';
+$string['setting_pdfmode_desc'] = 'Wie PDF-Dateien einer Abgabe zur KI gelangen. <strong>Text in Moodle extrahieren</strong> (Standard) liest den Text mit pdftotext aus und sendet ihn über das gewählte KI-Backend. <strong>Als Datei an Open WebUI senden</strong> lädt jede PDF-Datei zu Open WebUI hoch. Open WebUI extrahiert den Inhalt mit der dort konfigurierten Engine und übergibt das ganze Dokument an das Modell; die Datei wird danach gelöscht. Beurteilungsraster, Onlinetext und andere Dateitypen werden immer in Moodle extrahiert.<br><strong>Voraussetzungen:</strong> Backend „Local AI Manager", und das KI-Tool, das dem obigen Verwendungszweck zugewiesen ist, nutzt den ChatGPT-Connector (OpenAI-kompatibel) mit einem Open-WebUI-Endpunkt, der auf /api/chat/completions endet. Endpunkt, API-Schlüssel und Modell werden aus diesem Tool übernommen, für die Rolle des Kontos, unter dem die Anfrage läuft. Mit dem Backend „Moodle Core AI-Subsystem" hat diese Einstellung keine Wirkung.<br><strong>Hinweis:</strong> Die Anfragen gehen direkt an Open WebUI, nicht über den Local AI Manager. Sie erscheinen nicht in dessen Anfrageprotokoll und zählen nicht gegen dessen Kontingente. Open WebUI fügt den Dateiinhalt über sein RAG-Template ein, das eigene Anweisungen enthalten kann (z. B. Quellenangaben); prüfen Sie es in Open WebUI unter Admin-Bereich > Einstellungen > Dokumente. Das Plugin fordert pro Datei den vollständigen Inhalt an; ignoriert Ihre Open-WebUI-Version dies, aktivieren Sie dort „Bypass Embedding and Retrieval".';
+$string['pdfmode_text'] = 'Text in Moodle extrahieren';
+$string['pdfmode_openwebui'] = 'Als Datei an Open WebUI senden';
 $string['error_ai_manager_missing'] = 'Das Plugin „local_ai_manager" ist nicht installiert oder nicht verfügbar. Installieren Sie es oder wählen Sie als Backend das Moodle Core AI-Subsystem.';
 
 
@@ -76,6 +81,14 @@ $string['task_autograde'] = 'KI-Bewertung im Hintergrund (AI Grader)';
 $string['error_autograde_failed'] = 'Die KI-Bewertung ist fehlgeschlagen und wird erneut versucht: {$a}';
 $string['error_queue_failed'] = 'Die Bewertung konnte nicht in die Warteschlange gestellt werden. Bitte erneut versuchen.';
 $string['error_no_grader_account'] = 'Es wurde kein gültiges Konto gefunden, unter dem die KI-Anfrage laufen kann. Bitte die Plugin-Einstellung „Konto für automatische Bewertung" oder die Berechtigungen der Person prüfen, die den Lauf gestartet hat.';
+$string['error_openwebui_tool'] = 'Das KI-Tool, das im Local AI Manager dem Verwendungszweck „{$a}" zugewiesen ist, ist kein Open-WebUI-Endpunkt. Es muss den ChatGPT-Connector (ohne Azure) mit einem Endpunkt nutzen, der auf /api/chat/completions endet.';
+$string['error_openwebui_noapikey'] = 'Das KI-Tool im Local AI Manager hat keinen API-Schlüssel für Open WebUI.';
+$string['error_openwebui_nomodel'] = 'Dem KI-Tool im Local AI Manager ist kein Modell zugewiesen.';
+$string['error_openwebui_restricted'] = 'Der Zugriff auf die KI-Tools ist eingeschränkt: {$a}';
+$string['error_openwebui_request'] = 'Anfrage an Open WebUI fehlgeschlagen ({$a->step}): {$a->message}';
+$string['error_openwebui_badresponse'] = 'Open WebUI hat eine unerwartete Antwort geliefert.';
+$string['error_openwebui_processing'] = 'Open WebUI konnte die PDF-Datei nicht verarbeiten: {$a}';
+$string['error_openwebui_processtimeout'] = 'Open WebUI hat die Verarbeitung der PDF-Datei nicht rechtzeitig abgeschlossen.';
 $string['js_queued'] = 'In der Warteschlange …';
 $string['js_pending_timeout'] = 'Der KI-Vorschlag wird noch im Hintergrund erstellt. Er erscheint in diesem Panel, sobald er fertig ist – Sie können die Seite verlassen und später zurückkehren.';
 
