@@ -364,11 +364,21 @@ define(['jquery'], function($) {
                 toolbar.appendChild(apply);
                 toolbar.appendChild(jump);
 
+                // Shown when the suggestion was generated from an earlier version of the submission.
+                var stale = document.createElement('div');
+                stale.className = 'alert alert-warning small assignmentaifeedback-feedback-panel-stale';
+                stale.setAttribute('role', 'status');
+                stale.textContent = showButton
+                    ? (strings.stale || 'The submission was changed after this suggestion was generated.')
+                    : (strings.staleauto || 'The submission was changed after this suggestion was generated.');
+                stale.style.display = 'none';
+
                 var body = document.createElement('div');
                 body.className = 'assignmentaifeedback-feedback-panel-body';
 
                 panel.appendChild(header);
                 panel.appendChild(toolbar);
+                panel.appendChild(stale);
                 panel.appendChild(body);
 
                 var layout = loadLayout();
@@ -381,9 +391,10 @@ define(['jquery'], function($) {
                 return panel;
             };
 
-            var showPanel = function(html) {
+            var showPanel = function(html, stale) {
                 var panel = document.getElementById('assignmentaifeedback-feedback-panel') || buildPanel();
                 panel.querySelector('.assignmentaifeedback-feedback-panel-body').innerHTML = html;
+                panel.querySelector('.assignmentaifeedback-feedback-panel-stale').style.display = stale ? '' : 'none';
                 panel.style.display = '';
                 placePanel(panel);
             };
@@ -413,7 +424,7 @@ define(['jquery'], function($) {
                         }
                         if (response && response.success && response.feedback && !isEmptyContent(response.feedback)) {
                             currentFeedbackHtml = response.feedback;
-                            showPanel(response.feedback);
+                            showPanel(response.feedback, response.stale);
                         } else {
                             currentFeedbackHtml = '';
                             hidePanel();
@@ -470,7 +481,7 @@ define(['jquery'], function($) {
                                     !isEmptyContent(response.feedback)) {
                                 currentFeedbackHtml = response.feedback;
                                 loadedUserid = userid;
-                                showPanel(response.feedback);
+                                showPanel(response.feedback, response.stale);
                                 finish();
                                 return;
                             }
@@ -539,7 +550,7 @@ define(['jquery'], function($) {
                                     if (response.feedback) {
                                         currentFeedbackHtml = response.feedback;
                                         loadedUserid = currentUserid;
-                                        showPanel(response.feedback);
+                                        showPanel(response.feedback, false);
                                     }
                                     btn.prop('disabled', false).text(originalText);
                                     btn.data('force-regrade', false)

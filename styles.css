@@ -120,6 +120,14 @@
     background-color: #f7fbfd;
 }
 
+/* Notice that the suggestion belongs to an earlier version of the submission. */
+.assignmentaifeedback-feedback-panel-stale {
+    margin: 0;
+    padding: 6px 12px;
+    border-width: 0 0 1px 0;
+    border-radius: 0;
+}
+
 .assignmentaifeedback-feedback-panel-body {
     padding: 12px 16px;
     overflow-y: auto;
@@ -157,7 +165,8 @@
 }
 
 .assignmentaifeedback-feedback-panel.assignmentaifeedback-collapsed .assignmentaifeedback-feedback-panel-body,
-.assignmentaifeedback-feedback-panel.assignmentaifeedback-collapsed .assignmentaifeedback-feedback-panel-toolbar {
+.assignmentaifeedback-feedback-panel.assignmentaifeedback-collapsed .assignmentaifeedback-feedback-panel-toolbar,
+.assignmentaifeedback-feedback-panel.assignmentaifeedback-collapsed .assignmentaifeedback-feedback-panel-stale {
     display: none;
 }
 

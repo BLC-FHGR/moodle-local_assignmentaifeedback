@@ -42,9 +42,18 @@ $assignment = new assign($context, $cm, $course);
 
 $record = \local_assignmentaifeedback\grader::get_stored_feedback_record($assignment->get_instance()->id, $userid);
 
+// Whether the suggestion was generated from an earlier version of the submission.
+$stale = false;
+if ($record) {
+    $aiconfig = $DB->get_record('local_assignmentaifeedback_config', ['assignmentid' => $assignment->get_instance()->id]);
+    $grader = new \local_assignmentaifeedback\grader($assignment, $context, $aiconfig ?: new stdClass());
+    $stale = $grader->is_feedback_stale($record, $userid);
+}
+
 echo json_encode([
     'success'      => true,
     'feedback'     => $record ? (string) $record->feedback : '',
     'timemodified' => $record ? (int) $record->timemodified : 0,
+    'stale'        => $stale,
 ]);
 die();

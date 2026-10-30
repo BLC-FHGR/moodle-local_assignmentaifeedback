@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="local/assignmentaifeedback/db" VERSION="2026091400" COMMENT="XMLDB file for Moodle local/assignmentaifeedback"
+<XMLDB PATH="local/assignmentaifeedback/db" VERSION="2026103000" COMMENT="XMLDB file for Moodle local/assignmentaifeedback"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -32,6 +32,7 @@
         <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Student user ID"/>
         <FIELD NAME="feedback" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Generated AI feedback (HTML)"/>
         <FIELD NAME="model" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Model identifier, if known"/>
+        <FIELD NAME="submissionhash" TYPE="char" LENGTH="40" NOTNULL="false" SEQUENCE="false" COMMENT="Fingerprint of the submission content the suggestion was generated from"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
       </FIELDS>

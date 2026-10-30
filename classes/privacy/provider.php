@@ -65,6 +65,7 @@ class provider implements
         $collection->add_database_table('local_assignmentaifeedback_feedback', [
             'userid' => 'privacy:metadata:local_assignmentaifeedback_feedback:userid',
             'feedback' => 'privacy:metadata:local_assignmentaifeedback_feedback:feedback',
+            'submissionhash' => 'privacy:metadata:local_assignmentaifeedback_feedback:submissionhash',
             'timecreated' => 'privacy:metadata:local_assignmentaifeedback_feedback:timecreated',
             'timemodified' => 'privacy:metadata:local_assignmentaifeedback_feedback:timemodified',
         ], 'privacy:metadata:local_assignmentaifeedback_feedback');
@@ -140,6 +141,7 @@ class provider implements
             }
             $data = (object) [
                 'feedback' => format_text($record->feedback, FORMAT_HTML),
+                'submissionhash' => $record->submissionhash,
                 'timecreated' => transform::datetime($record->timecreated),
                 'timemodified' => transform::datetime($record->timemodified),
             ];

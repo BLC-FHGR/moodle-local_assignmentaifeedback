@@ -42,5 +42,23 @@ defined('MOODLE_INTERNAL') || die();
  * @return bool
  */
 function xmldb_local_assignmentaifeedback_upgrade($oldversion) {
+    global $DB;
+
+    $dbman = $DB->get_manager();
+
+    if ($oldversion < 2026103000) {
+        // Fingerprint of the submission a suggestion was generated from, so a changed
+        // submission is graded again instead of keeping the suggestion for the old one.
+        // Existing rows stay NULL: which version they belong to is unknown.
+        $table = new xmldb_table('local_assignmentaifeedback_feedback');
+        $field = new xmldb_field('submissionhash', XMLDB_TYPE_CHAR, '40', null, null, null, null, 'model');
+
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_plugin_savepoint(true, 2026103000, 'local', 'assignmentaifeedback');
+    }
+
     return true;
 }

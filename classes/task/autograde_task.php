@@ -67,9 +67,36 @@ class autograde_task extends \core\task\adhoc_task {
             'graderid'     => $graderid,
         ]);
 
-        // Second argument dedupes identical queued tasks. A regrade carries
-        // different custom data, so it is never swallowed by a pending plain run.
-        return \core\task\manager::queue_adhoc_task($task, true);
+        // Dedupe identical tasks that are still waiting: they read the submission
+        // when they run, so they will pick up this change too. A task that already
+        // started is not a duplicate, it may be grading the previous version of the
+        // submission. core's own check (second argument of queue_adhoc_task()) also
+        // matches running tasks, so it would swallow this run. A regrade carries
+        // different custom data and is never swallowed by a pending plain run.
+        if (self::is_waiting($task)) {
+            return true;
+        }
+        return (bool) \core\task\manager::queue_adhoc_task($task);
+    }
+
+    /**
+     * Whether an identical task is queued and has not started yet.
+     *
+     * @param self $task
+     * @return bool
+     */
+    private static function is_waiting(self $task): bool {
+        global $DB;
+
+        $record = \core\task\manager::record_from_adhoc_task($task);
+        $select = 'classname = :classname AND component = :component AND timestarted IS NULL AND '
+            . $DB->sql_compare_text('customdata', \core_text::strlen($record->customdata) + 1) . ' = :customdata';
+
+        return $DB->record_exists_select('task_adhoc', $select, [
+            'classname'  => $record->classname,
+            'component'  => $record->component,
+            'customdata' => $record->customdata,
+        ]);
     }
 
     /**

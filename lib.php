@@ -337,6 +337,8 @@ function local_assignmentaifeedback_before_footer() {
             'paneljump'       => get_string('js_panel_jump', 'local_assignmentaifeedback'),
             'panelcollapse'   => get_string('js_panel_collapse', 'local_assignmentaifeedback'),
             'panelmove'       => get_string('js_panel_move', 'local_assignmentaifeedback'),
+            'stale'           => get_string('js_panel_stale', 'local_assignmentaifeedback'),
+            'staleauto'       => get_string('js_panel_stale_auto', 'local_assignmentaifeedback'),
             'apply'           => get_string('js_panel_apply', 'local_assignmentaifeedback'),
             'applyconfirm'    => get_string('js_panel_apply_confirm', 'local_assignmentaifeedback'),
             'applyfailed'     => get_string('js_panel_apply_failed', 'local_assignmentaifeedback'),

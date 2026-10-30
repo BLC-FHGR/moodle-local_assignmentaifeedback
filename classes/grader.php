@@ -85,6 +85,7 @@ class grader {
 
             $count = 0;
             foreach ($pending as $userid => $submission) {
+                $fingerprint     = $this->get_submission_fingerprint($userid);
                 $submission_text = $this->get_submission_text($userid);
 
                 if (empty($submission_text)) {
@@ -97,7 +98,7 @@ class grader {
                 $feedback = $this->call_ai_service($prompt);
 
                 if ($feedback) {
-                    $this->save_feedback($userid, $feedback);
+                    $this->save_feedback($userid, $feedback, $fingerprint);
                     $count++;
                 }
             }
@@ -122,12 +123,17 @@ class grader {
      * let Moodle retry it later.
      *
      * @param int $userid The user ID to grade
-     * @param bool $force_regrade Whether to regenerate feedback that already exists
+     * @param bool $force_regrade Whether to regenerate feedback that is still current
      * @return array Result with success status and any errors
      */
     public function grade_single_submission($userid, $force_regrade = false) {
         try {
-            if (!$force_regrade && $this->has_ai_feedback($userid)) {
+            // Taken before the text is read: should the student change the submission
+            // while the AI request runs, the stored fingerprint is the older one and
+            // the suggestion shows up as stale rather than as current.
+            $fingerprint = $this->get_submission_fingerprint($userid);
+
+            if (!$force_regrade && $this->has_current_feedback($userid, $fingerprint)) {
                 return [
                     'success'        => false,
                     'already_graded' => true,
@@ -155,7 +161,7 @@ class grader {
             $feedback = $this->call_ai_service($prompt);
 
             if ($feedback) {
-                $this->save_feedback($userid, $feedback);
+                $this->save_feedback($userid, $feedback, $fingerprint);
                 return ['success' => true, 'regraded' => $force_regrade, 'feedback' => trim($feedback)];
             }
 
@@ -340,7 +346,7 @@ class grader {
     }
 
     /**
-     * Get all submitted submissions that do not have AI feedback yet.
+     * Get all submitted submissions without a current AI feedback suggestion.
      *
      * Public so the bulk endpoint can queue one background task per submission
      * instead of grading them all inside a single request.
@@ -359,9 +365,9 @@ class grader {
                 continue;
             }
 
-            // Skip submissions that already carry feedback (AI or manual),
-            // so we never overwrite existing comments and never re-process.
-            if ($this->has_ai_feedback($userid)) {
+            // Skip submissions whose suggestion still matches what was handed in.
+            // A suggestion for an earlier version of the submission is regenerated.
+            if ($this->has_current_feedback($userid)) {
                 continue;
             }
 
@@ -372,22 +378,77 @@ class grader {
     }
 
     /**
-     * Whether an AI feedback suggestion already exists for this user.
+     * Whether a stored AI feedback suggestion matches the current submission.
      *
      * The AI feedback is stored in the plugin's own table (advisory only, never
-     * in the official feedback field), so its presence is used to detect whether
-     * a submission was already processed and to let the bulk grader skip it.
+     * in the official feedback field), so a current row means the submission was
+     * already processed and lets the graders skip it.
      *
      * @param int $userid
+     * @param string|null $fingerprint Current submission fingerprint, if already known
      * @return bool
      */
-    private function has_ai_feedback($userid) {
+    private function has_current_feedback($userid, $fingerprint = null) {
+        $record = self::get_stored_feedback_record($this->assignment->get_instance()->id, $userid);
+
+        return $record && !$this->is_feedback_stale($record, $userid, $fingerprint);
+    }
+
+    /**
+     * Whether a stored suggestion was generated from an earlier version of the submission.
+     *
+     * Rows stored before the fingerprint was introduced carry none. For those the
+     * submission's modification time is the best available hint.
+     *
+     * @param \stdClass $record Row from local_assignmentaifeedback_feedback
+     * @param int $userid
+     * @param string|null $fingerprint Current submission fingerprint, if already known
+     * @return bool
+     */
+    public function is_feedback_stale($record, $userid, $fingerprint = null) {
+        if (!empty($record->submissionhash)) {
+            if ($fingerprint === null) {
+                $fingerprint = $this->get_submission_fingerprint($userid);
+            }
+            return $record->submissionhash !== $fingerprint;
+        }
+
+        $submission = $this->assignment->get_user_submission($userid, false);
+        return $submission && $submission->timemodified > $record->timemodified;
+    }
+
+    /**
+     * Fingerprint of the submission content the AI reads.
+     *
+     * Built from the online text and the content hashes of the submitted files,
+     * so it needs no text extraction and changes exactly when the student changes
+     * what they hand in. Uploading an identical file again keeps the fingerprint.
+     *
+     * @param int $userid
+     * @return string SHA-1 hex digest, or '' when there is no submission
+     */
+    public function get_submission_fingerprint($userid) {
         global $DB;
 
-        return $DB->record_exists('local_assignmentaifeedback_feedback', [
-            'assignmentid' => $this->assignment->get_instance()->id,
-            'userid'       => $userid,
-        ]);
+        $submission = $this->assignment->get_user_submission($userid, false);
+        if (!$submission) {
+            return '';
+        }
+
+        $parts = [];
+
+        $parts[] = (string) $DB->get_field('assignsubmission_onlinetext', 'onlinetext',
+            ['assignment' => $this->assignment->get_instance()->id, 'submission' => $submission->id]);
+
+        $fs    = get_file_storage();
+        $files = $fs->get_area_files($this->context->id, 'assignsubmission_file',
+            'submission_files', $submission->id, 'filepath, filename', false);
+
+        foreach ($files as $file) {
+            $parts[] = $file->get_filepath() . $file->get_filename() . ':' . $file->get_contenthash();
+        }
+
+        return sha1(implode("\n", $parts));
     }
 
     /**
@@ -698,9 +759,10 @@ class grader {
      *
      * @param int $userid
      * @param string $feedback
+     * @param string $fingerprint Fingerprint of the submission the feedback was generated from
      * @return bool Success status
      */
-    private function save_feedback($userid, $feedback) {
+    private function save_feedback($userid, $feedback, $fingerprint) {
         global $DB;
 
         $feedback     = trim($feedback);
@@ -717,15 +779,17 @@ class grader {
         ]);
 
         if ($existing) {
-            $existing->feedback     = $feedback;
-            $existing->timemodified = $now;
+            $existing->feedback       = $feedback;
+            $existing->submissionhash = $fingerprint;
+            $existing->timemodified   = $now;
             $DB->update_record('local_assignmentaifeedback_feedback', $existing);
         } else {
             $record = new \stdClass();
-            $record->assignmentid = $assignmentid;
-            $record->userid       = $userid;
-            $record->feedback     = $feedback;
-            $record->timecreated  = $now;
+            $record->assignmentid   = $assignmentid;
+            $record->userid         = $userid;
+            $record->feedback       = $feedback;
+            $record->submissionhash = $fingerprint;
+            $record->timecreated    = $now;
             $record->timemodified = $now;
             $DB->insert_record('local_assignmentaifeedback_feedback', $record);
         }

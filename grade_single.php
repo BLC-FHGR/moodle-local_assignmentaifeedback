@@ -64,7 +64,11 @@ if ($action === 'grade') {
     // grading uses is queued, and the feedback panel polls for the result.
     $existing = \local_assignmentaifeedback\grader::get_stored_feedback_record($assignmentid, $userid);
 
-    if (!$force_regrade && $existing) {
+    // A suggestion for an earlier version of the submission is regenerated without
+    // asking: it no longer describes what the student handed in.
+    $grader = new \local_assignmentaifeedback\grader($assignment, $context, $aiconfig);
+
+    if (!$force_regrade && $existing && !$grader->is_feedback_stale($existing, $userid)) {
         echo json_encode([
             'success'        => false,
             'already_graded' => true,

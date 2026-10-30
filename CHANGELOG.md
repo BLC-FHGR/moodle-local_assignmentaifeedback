@@ -3,6 +3,23 @@
 Änderungen an der FHGR-Fassung von `local_assignmentaifeedback` (bis v2.6.0-fhgr:
 `local_aigrade`). Einträge vor v3.0.0-fhgr nennen weiterhin die damaligen Namen.
 
+## v3.3.0-fhgr - 2026-10-30
+**A changed submission is graded again.** Previously any stored suggestion blocked every
+further run: when a student uploaded a new file, the automatic run was skipped
+("already has feedback") and the panel kept showing the suggestion for the old version.
+- New field `submissionhash` in `local_assignmentaifeedback_feedback` (upgrade step
+  `2026103000`): a SHA-1 over the online text and the content hashes of the submitted
+  files. It needs no text extraction; uploading an identical file again keeps it.
+- Automatic run, single and bulk grading regenerate a suggestion whose fingerprint no
+  longer matches. Suggestions stored before this version have no fingerprint; they count
+  as outdated when the submission was modified after the suggestion.
+- The panel shows a notice when the suggestion belongs to an earlier version of the
+  submission. New strings `js_panel_stale`, `js_panel_stale_auto` (de/en).
+- Fix: a submission changed while its grading task was running was not queued again,
+  because core's duplicate check also matches running tasks. Only tasks that have not
+  started yet count as duplicates now.
+- Privacy API declares and exports the new field.
+
 ## v3.2.0-fhgr — 2026-10-29
 **Das KI-Feedback-Panel lässt sich verschieben und in der Grösse ändern.** Bisher war es
 fest am rechten Rand angedockt und konnte nur ein- und ausgeklappt werden – es lag damit
