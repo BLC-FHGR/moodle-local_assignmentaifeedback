@@ -113,18 +113,26 @@ Dozierenden-Rollen entfernen und im Kursbereich gezielt erlauben.
 5. Optional ein Beurteilungsraster hochladen
 6. Speichern
 
-> Mit **„Automatisch bei Abgabe bewerten"** entfallen beide manuellen Schaltflächen: Jede
-> Abgabe wird ohnehin eingereiht, die Schaltflächen hätten nichts mehr auszulösen. Das
-> Vorschlags-Panel in der Einzelansicht bleibt – dort erscheint das Ergebnis des
-> automatischen Laufs.
+> Mit **„Automatisch bei Abgabe bewerten"** entfällt die Sammelbewertung: Jede Abgabe wird
+> ohnehin eingereiht, auch erneut, wenn die studierende Person sie ändert. Die Schaltfläche
+> der Einzelbewertung erscheint nur, wenn der Vorschlag zu einer älteren Fassung gehört oder
+> der letzte Lauf endgültig fehlgeschlagen ist. Das Vorschlags-Panel in der Einzelansicht
+> bleibt – dort erscheint das Ergebnis des automatischen Laufs.
 
 ### Einzelbewertung
 Abgabe öffnen → Schaltfläche **„Mit KI bewerten"**. Der Vorschlag erscheint im Panel rechts.
 Mit **„Ins Feedback-Feld übernehmen"** lässt er sich in Moodles Feedback-Editor übertragen;
 gespeichert wird er nur durch die Dozierenden selbst.
 
+Das Panel zeigt zusätzlich:
+- einen **gelben Hinweis**, wenn die Abgabe nach dem Vorschlag geändert wurde (Vergleich über
+  einen Fingerabdruck aus Onlinetext und Datei-Hashes; eine identische Datei erneut
+  hochzuladen gilt nicht als Änderung),
+- einen **roten Hinweis**, wenn der letzte Bewertungslauf fehlgeschlagen ist, mit der
+  Fehlermeldung und dem Vermerk, ob Moodle den Lauf automatisch wiederholt.
+
 ### Sammelbewertung
-In der Abgabenübersicht **„Alle mit KI bewerten"**. Es werden nur Abgaben verarbeitet, für die noch **kein** KI-Vorschlag vorliegt.
+In der Abgabenübersicht **„Alle mit KI bewerten"**. Es werden nur Abgaben verarbeitet, für die noch **kein** KI-Vorschlag vorliegt oder deren Vorschlag zu einer älteren Fassung der Abgabe gehört.
 
 ## Funktionsweise
 
@@ -138,7 +146,7 @@ In der Abgabenübersicht **„Alle mit KI bewerten"**. Es werden nur Abgaben ver
 
 - Abgabetexte werden an den im `local_ai_manager` (bzw. im Moodle-AI-Subsystem) konfigurierten KI-Anbieter übermittelt. Bei lokal gehosteten Modellen bleiben sie in der eigenen Infrastruktur. Klären Sie die Vereinbarkeit mit den Datenschutzvorgaben Ihrer Hochschule (in der Schweiz insb. revDSG) und informieren Sie die Studierenden.
 - Der `local_ai_manager` protokolliert Prompt und Antwort in `local_ai_manager_request_log` (Zugriff über Capabilities steuern).
-- Dieses Plugin speichert keine personenbezogenen Daten über die gespeicherten KI-Vorschläge hinaus und implementiert die Moodle-Privacy-API.
+- Dieses Plugin speichert pro Abgabe nur den KI-Vorschlag, einen Fingerabdruck der Abgabe (SHA-1, kein Inhalt) und die Fehlermeldung des letzten fehlgeschlagenen Laufs (ohne Abgabeinhalt). Es implementiert die Moodle-Privacy-API.
 - Diese Version enthält **kein** Debug-Logging von Abgaben und **keinen** externen Google-Docs-Abruf (in der Ursprungsversion vorhanden, aus Datenschutzgründen entfernt).
 
 ## Grenzen
